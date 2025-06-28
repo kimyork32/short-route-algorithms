@@ -1,7 +1,7 @@
 # Compilador y flags
 CXX = g++
 CXXFLAGS = -I/usr/local/include -Iinclude -std=c++17 -Wall -Wextra -g
-LDFLAGS = -L/usr/local/lib -lsfml-graphics -lsfml-window -lsfml-system
+LDFLAGS = -L/usr/local/lib -lsfml-graphics -lsfml-window -lsfml-system -lgmp -lgmpxx
 
 # Directorio de fuentes
 SRC_DIR =  src/

@@ -1,6 +1,6 @@
 #pragma once
 #include <SFML/Graphics.hpp>
-#include "Player.hpp"
+#include "Malla.hpp"
 
 class Game {
 public:
@@ -8,11 +8,25 @@ public:
     void run();
 
 private:
-    void processEvents();
-    void update(sf::Time deltaTime);
+    bool processEvents();
+    void update();
     void render();
 
+    // const int width = 1920;
+    // const int height = 1050;
+    const int windowWidth = 900;
+    const int windowHeight = 900;
+
+    const int mapWidth = 6000;
+    const int mapHeight = 6000;
+
+    const int pointSize = 1;
+    const int cellSize = 1;
+
     sf::RenderWindow window;
-    Player player;
-    const sf::Time TimePerFrame = sf::seconds(1.f / 60.f);
+    StaticDisplayMap grid;
+    bool waitSecordClick = false;
+    sf::Vector2i firstClick;
+    sf::View view;
+    const float cameraSpeed = 10.0f;
 };
