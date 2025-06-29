@@ -1,6 +1,9 @@
 #pragma once
 #include <SFML/Graphics.hpp>
 #include "Malla.hpp"
+#include "Hud.hpp"
+#include "Mode.hpp"
+
 
 class Game {
 public:
@@ -8,25 +11,38 @@ public:
     void run();
 
 private:
-    bool processEvents();
+
+    sf::Vector2f getViewTopLeft() const;
+    void processEvents();
     void update();
     void render();
+    void calculateRoute();
+    void generateMap();
 
-    // const int width = 1920;
-    // const int height = 1050;
-    const int windowWidth = 900;
+    // VARAIBLES
+    const int windowWidth = 1200;
     const int windowHeight = 900;
 
-    const int mapWidth = 6000;
-    const int mapHeight = 6000;
+    const int mapWidth = 10000;
+    const int mapHeight = 10000;
 
-    const int pointSize = 1;
-    const int cellSize = 1;
+    const int pointSize = 3;
+    const int sizeNodes = 7000;
+    const float cameraSpeed = 10.0f;
 
+    sf::Vector2i firstClick;
+
+    // CONDICIONALES
+    Mode mode;
+    Algorithm alg;
+    Map map;
+
+    bool waitSecordClick = false;
+    bool endModeRemoveArist = false;
+
+    // ATRIBUTOS PRINCIPALES
     sf::RenderWindow window;
     StaticDisplayMap grid;
-    bool waitSecordClick = false;
-    sf::Vector2i firstClick;
+    Hud hud;
     sf::View view;
-    const float cameraSpeed = 10.0f;
 };
