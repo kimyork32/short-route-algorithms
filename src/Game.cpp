@@ -44,7 +44,7 @@ void Game::processEvents() {
 
             if ((x > posWin.x + windowWidth - hud.getWidthOpt()) && 
                 (y < posWin.y + hud.getHeight())) {
-                std::cout << "update opt\n";
+                // std::cout << "update opt\n";
                 hud.updateOpt(x - static_cast<int>(posWin.x), y - static_cast<int>(posWin.y));
                 switch (hud.getSl()) {
                     case Select::NOTHING: 
@@ -69,10 +69,10 @@ void Game::processEvents() {
                 sf::Vector2i mousePos(x, y); 
                 switch (hud.getMode()) {
                     case Mode::NOTHING: 
-                        std::cout << "nada" << std::endl;
+                        // std::cout << "nada" << std::endl;
                         break;
                     case Mode::INSERT_ARIST: 
-                        std::cout << "mode insert arist" << std::endl;
+                        // std::cout << "mode insert arist" << std::endl;
                         if (event.mouseButton.button == sf::Mouse::Left) {
                             if (waitSecordClick) {
                                 grid.insertEdgeWindow(firstClick, mousePos);
@@ -86,7 +86,7 @@ void Game::processEvents() {
                         break;
 
                     case Mode::INSERT_NODES:
-                        std::cout << "mode insert nodes" << std::endl;
+                        // std::cout << "mode insert nodes" << std::endl;
                         if (event.mouseButton.button == sf::Mouse::Left) {
                             grid.insertPointWindow(mousePos);
                         }
@@ -107,9 +107,22 @@ void Game::processEvents() {
                         break;
 
                     case Mode::REMOVE_NODE:
-                        std::cout << "mode remove node" << std::endl;
+                        // std::cout << "mode remove node" << std::endl;
                         if (event.mouseButton.button == sf::Mouse::Left) {
                             grid.removeNodeWindow(mousePos);
+                        }
+                        break;
+                    case Mode:: SELECT_START_END_NODE: 
+                        // std::cout << "mode insert start_end_node" << std::endl;
+                        if (event.mouseButton.button == sf::Mouse::Left) {
+                            if (waitSecordClick) {
+                                grid.insertStartEndNode(firstClick, mousePos);
+                                waitSecordClick = false;
+                            }
+                            else {
+                                firstClick = mousePos;
+                                waitSecordClick = true;
+                            }
                         }
                         break;
                 }
@@ -119,13 +132,16 @@ void Game::processEvents() {
         if (event.type == sf::Event::KeyReleased) {
             switch (event.key.code) {
                 case sf::Keyboard::X:
+                    std::cout << "remove arist" << std::endl;
                     if (hud.getMode() != Mode::REMOVE_ARISTS)
                         hud.setMode(Mode::REMOVE_ARISTS);
                     else
+                        waitSecordClick = false;
                         hud.setMode(Mode::NOTHING);
                     break;
 
                 case sf::Keyboard::C:
+                    std::cout << "remove node" << std::endl;
                     if (hud.getMode() != Mode::REMOVE_NODE)
                         hud.setMode(Mode::REMOVE_NODE);
                     else
@@ -196,8 +212,26 @@ void Game::render() {
 }
 
 void Game::calculateRoute() {
-    // nothing
+    switch (hud.getAlg()) {
+        case Algorithm::DIJKSTRA: 
+            grid.dijkstra();
+            break;
+        case Algorithm::A_STAR: 
+            grid.aStar();
+            break;
+    }
 }
 void Game::generateMap() {
-    // nothing
+    switch (hud.getMap()) {
+        case Map::RANDOM: 
+            grid.genRandGraph();
+            break;
+        case Map::LIMA: 
+            //
+            break;
+        case Map::AREQUIPA: 
+            //
+            break;
+    }
+
 }

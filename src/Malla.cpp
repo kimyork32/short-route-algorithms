@@ -12,6 +12,8 @@ StaticDisplayMap::StaticDisplayMap(int width, int height, int size, int sizeNode
     : width(width), height(height), pointSize(size), sizeNodes(sizeNodes) {
 
     renderTexture.create(width, height);
+    startNode = {-1, -1};
+    endNode = {-1, -1};
     genRandGraph();
 }
 
@@ -46,7 +48,7 @@ bool StaticDisplayMap::existsEdge(Point& from, Point& to) {
 void StaticDisplayMap::insertPointWindow(Point node) {
     const Point* tmp = getPointIfExists(node);
     if (tmp) {
-        std::cout << "existe node" << std::endl;
+        // std::cout << "existe node" << std::endl;
         return;
     }
     insertPoint(node);
@@ -56,7 +58,7 @@ void StaticDisplayMap::insertPointWindow(Point node) {
 
 void StaticDisplayMap::insertEdgeWindow(Point from, Point to) {
     if (existsEdge(from, to)) {
-        std::cout << "existe arista" << std::endl;
+        // std::cout << "existe arista" << std::endl;
         return;
     }
     const Point* f = getPointIfExists(from);
@@ -145,7 +147,7 @@ bool StaticDisplayMap::ifIntersect(const Point& p1, const Point& p2, const Point
 void StaticDisplayMap::removeNodeWindow(Point node) {
     const Point* n = getPointIfExists(node);
     if (n) {
-        std::cout << "existe nodo a remover" << std::endl;
+        // std::cout << "existe nodo a remover" << std::endl;
         Point p = *n;
         for (auto& [from, edge] : graph) {
             edge.erase(
@@ -164,7 +166,7 @@ void StaticDisplayMap::removeNodeWindow(Point node) {
 
 void StaticDisplayMap::removeEdgeWindow(Point from, Point to) {
     bool change = false;
-    std::cout << "removiento arista" << std::endl;
+    // std::cout << "removiento arista" << std::endl;
     for (auto& [from2, edge] : graph) {
         edge.erase(
             std::remove_if(edge.begin(), edge.end(),
@@ -172,7 +174,7 @@ void StaticDisplayMap::removeEdgeWindow(Point from, Point to) {
                     const Point& to2 = e.first;
                     bool c = ifIntersect(from, to, from2, to2);
                     if (c) {
-                        std::cout << "se intersecan (" << from2.x << ", " << from2.y << "), (" << to.x << ", " << to.y << ")" << std::endl;
+                        // std::cout << "se intersecan (" << from2.x << ", " << from2.y << "), (" << to.x << ", " << to.y << ")" << std::endl;
                         change = true;
 
                     }
@@ -187,7 +189,27 @@ void StaticDisplayMap::removeEdgeWindow(Point from, Point to) {
     }
 }
 
+void  StaticDisplayMap::insertStartEndNode(Point from, Point to) {
+    startNode = from;
+    endNode = to;
+}
+
+float StaticDisplayMap::getDistance(Point& from, Point& to) {
+    return std::sqrtl(std::pow(from.x - to.x, 2) + std::pow(from.y - to.y, 2));
+}
+
+void StaticDisplayMap::dijkstra() {
+    if (!startNode.isValid() || !endNode.isValid()) {
+        std::cout << "nodos start y end no iniciados" << std::endl;
+    }
+}
+
+void StaticDisplayMap::aStar() {
+
+}
+
 void StaticDisplayMap::genRandGraph() {
+    std::cout << "creando mapa random" << std::endl;
     using Kernel = CGAL::Exact_predicates_inexact_constructions_kernel;
     using Delaunay = CGAL::Delaunay_triangulation_2<Kernel>;
     using CGALPoint = Kernel::Point_2;
@@ -266,6 +288,12 @@ void StaticDisplayMap::updateTextureUnit(Point* from, Point* to) {
     }
     renderTexture.display();
     mapSprite.setTexture(renderTexture.getTexture());
+}
+
+void StaticDisplayMap::updateTextureRoute(){
+    if (!startNode.isValid() || !endNode.isValid()) {
+        std::cout << "nodos start y end no iniciados" << std::endl;
+    }
 }
 
 void StaticDisplayMap::updateTextureAll() {

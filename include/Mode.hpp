@@ -7,6 +7,7 @@ enum class Mode {
     INSERT_ARIST,
     REMOVE_ARISTS,
     REMOVE_NODE,
+    SELECT_START_END_NODE,
     COUNT
 };
 

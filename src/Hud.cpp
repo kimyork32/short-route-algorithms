@@ -33,21 +33,21 @@ void Hud::updateOpt(int x, int y) {
     const float sepLeft = 10.f;
 
     // int wo = widthOpt / 4;
-    std::cout << x << " " << y << std::endl;
+    // std::cout << x << " " << y << std::endl;
     if (x > space * 0 + shiftRight && x < space * 1 + shiftRight) {
-        std::cout << "1\n";
+        // std::cout << "1\n";
         this->sl = Select::CALCULATE_ROUTE;
     }
     else if (x > space * 1 + shiftRight && x < space * 2 + shiftRight) {
-        std::cout << "2\n";
+        // std::cout << "2\n";
         this->sl = Select::CHANGE_ALG;
     }
     else if (x > space * 2 + shiftRight && x < space * 3 + shiftRight) {
-        std::cout << "3\n";
+        // std::cout << "3\n";
         this->sl = Select::CREATE_MAP;
     }
     else if (x > space * 3 + shiftRight && x < space * 4 + shiftRight) {
-        std::cout << "4\n";
+        // std::cout << "4\n";
         this->sl = Select::CHANGE_MAP;
     }
 

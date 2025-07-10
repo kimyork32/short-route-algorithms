@@ -5,8 +5,10 @@
 #include <functional>
 
 struct Point {
-    int x, y;
+    int x;
+    int y;
     Point(int x, int y) : x(x), y(y) {}
+    Point() : x(0), y(0) {}
     Point(const sf::Vector2i& v) : x(v.x), y(v.y) {}
 
     bool operator==(const Point& other) const {
@@ -14,6 +16,9 @@ struct Point {
     }
     bool operator==(const sf::Vector2i& other) const {
         return x == other.x && y == other.y;
+    }
+    bool isValid() {
+        return x >= 0 && y >= 0;
     }
 };
 
@@ -38,15 +43,21 @@ public:
     void insertEdgeWindow(Point from, Point to);
     void insertPoint(Point node);
     void insertEdge(Point from, Point to);
+    void insertStartEndNode(Point from, Point to);
 
     void removeNodeWindow(Point node);
     void removeEdgeWindow(Point from, Point to);
 
+    float getDistance(Point& from, Point& to);
+    void dijkstra();
+    void aStar();
+
     void genRandGraph();
     void render(sf::RenderWindow& window);
     void updateTextureUnit(Point* from, Point* to);
+    void updateTextureRoute();
     void updateTextureAll();
-
+    
     int orientation(const Point& a, const Point& b, const Point& c);
     bool inSegment(const Point& a, const Point& b, const Point& c);
     bool ifIntersect(const Point& p1, const Point& p2, const Point& p3, const Point& p4);
@@ -56,7 +67,11 @@ public:
 private:
     int width, height, pointSize;
     std::unordered_map<Point, std::vector<std::pair<Point, std::vector<Point>>>> graph;
+    std::vector<std::pair<Point, std::pair<Point, std::vector<Point>>>> route;
     sf::RenderTexture renderTexture;
     sf::Sprite mapSprite;
     int sizeNodes;
+    Point startNode;
+    Point endNode;
+
 };
