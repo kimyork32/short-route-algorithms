@@ -1,4 +1,5 @@
 #include "../include/Hud.hpp"
+#include <cmath>
 #include <iostream>
 
 Hud::Hud(int widthWinFloat, int heightWinFloat) 
@@ -11,15 +12,19 @@ Hud::Hud(int widthWinFloat, int heightWinFloat)
     map(Map::RANDOM),
     mode(Mode::NOTHING)
 {
-    renderTextureOpt.create(widthOpt, height);
     renderTextureShow.create(widthShow, height);
+    renderTextureOpt.create(widthOpt, height);
+    renderTextureMinimap.create(widthWinFloat * widthScaleMinimap, heightWinFloat * heightScaleMinimap);
     spriteShow.setPosition(0, 0);
     spriteOpt.setPosition(0, 0);
+    spriteMinimap.setPosition(0, 0);
 }
 
 void Hud::render(sf::RenderWindow& window) {
     window.draw(spriteShow);
     window.draw(spriteOpt);
+    window.draw(spriteMinimap);
+    // std::cout << "spriteMinimap dibujado" << std::endl;
 }
 
 // calculateRoute | changeAlg | createMap | changeMap
@@ -102,6 +107,40 @@ void Hud::updateOpt(int x, int y) {
     renderTextureOpt.display();
     spriteOpt.setTexture(renderTextureOpt.getTexture(), true);
     spriteOpt.setPosition(posX + shiftRight, posY);
+}
+
+void Hud::updateMinimap(sf::Vector2f coordinates, sf::Sprite window) {
+    sf::Vector2f sizeMinimap = {
+        widthWinFloat * widthScaleMinimap, 
+        heightWinFloat * heightScaleMinimap
+    };
+    sf::Vector2f sizeRect = {
+        sizeMinimap.x * widthWinFloat / mapWidth, 
+        sizeMinimap.y * heightWinFloat / mapHeight
+    };
+    sf::Vector2f coordinatesMinimap = {
+        coordinates.x + widthWinFloat - (sizeMinimap.x + 10.f),
+        coordinates.y + heightWinFloat - (sizeMinimap.y + 10.f)
+    };
+    sf::Vector2f coordinatesRect = {
+        coordinates.x * sizeMinimap.x / mapWidth,
+        (sizeMinimap.y - sizeRect.y) - (coordinates.y * sizeMinimap.y / mapHeight)
+    };
+
+    window.setScale(widthScaleMinimap, heightScaleMinimap);
+    renderTextureMinimap.draw(window);
+
+    sf::RectangleShape rect;
+    rect.setSize(sizeRect);
+    rect.setPosition(coordinatesRect);
+    rect.setFillColor(sf::Color::Transparent);
+    rect.setOutlineColor(sf::Color::White);
+    rect.setOutlineThickness(2.f);
+    renderTextureMinimap.draw(rect);
+
+    spriteMinimap.setTexture(renderTextureMinimap.getTexture(), true);
+    // std::cout << "posicion de minimap: " << coordinatesMinimap.x << " " << coordinatesMinimap.y << std::endl;
+    spriteMinimap.setPosition(coordinatesMinimap);
 }
 
 void Hud::updateShow(int sizeNodes) {

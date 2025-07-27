@@ -11,6 +11,7 @@ public:
     void render(sf::RenderWindow& window);
     void updateOpt(int x, int y);
     void updateShow(int sizeNodes);
+    void updateMinimap(sf::Vector2f coordinates, sf::Sprite window);
 
     int getHeight() const;
     int getWidthShow() const;
@@ -32,6 +33,12 @@ private:
     int widthWinFloat;
     int heightWinFloat;
 
+    const int mapWidth = 10000;
+    const int mapHeight = 10000;
+
+    const float widthScaleMinimap = 15.f / 100;
+    const float heightScaleMinimap = 15.f / 100;
+
     const int height = 25;
     const int widthShow = 480 + 4;
     const int widthOpt = 480 + 4;
@@ -41,6 +48,9 @@ private:
 
     sf::RenderTexture renderTextureShow;
     sf::Sprite spriteShow;
+
+    sf::RenderTexture renderTextureMinimap;
+    sf::Sprite spriteMinimap;
 
     // CONDICIONALES
     Select sl;

@@ -21,21 +21,16 @@ private:
 
     // VARAIBLES
     const int windowWidth = 1200;
-    const int windowHeight = 900;
+    const int windowHeight = 700;
 
     const int mapWidth = 10000;
     const int mapHeight = 10000;
 
     const int pointSize = 3;
-    const int sizeNodes = 7000;
+    const int sizeNodes = 100000;
     const float cameraSpeed = 10.0f;
 
     sf::Vector2i firstClick;
-
-    // CONDICIONALES
-    Mode mode;
-    Algorithm alg;
-    Map map;
 
     bool waitSecordClick = false;
     bool endModeRemoveArist = false;

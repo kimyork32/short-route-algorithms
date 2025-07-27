@@ -1,6 +1,7 @@
 #include "../include/Malla.hpp"
 #include <iostream>
 #include <random>
+#include <fstream>
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Delaunay_triangulation_2.h>
 
@@ -9,12 +10,17 @@ typedef CGAL::Delaunay_triangulation_2<K> Delaunay;
 typedef K::Point_2 CGALPoint;
 
 StaticDisplayMap::StaticDisplayMap(int width, int height, int size, int sizeNodes)
-    : width(width), height(height), pointSize(size), sizeNodes(sizeNodes) {
+    : width(width), 
+    height(height), 
+    pointSize(size), 
+    sizeNodes(sizeNodes)
+{
 
     renderTexture.create(width, height);
     startNode = {-1, -1};
     endNode = {-1, -1};
     genRandGraph();
+    // genArequipa(10000, 10000);
 }
 
 
@@ -93,15 +99,20 @@ void StaticDisplayMap::insertPoint(Point node) {
     graph[node];
 }
 
+void StaticDisplayMap::insertEdge(Point from, Point to, const std::vector<Point>& geometry) {
+    graph[from].push_back({to, geometry});
+    graph[to].push_back({from, geometry});
+    // updateTexture();
+}
+
 void StaticDisplayMap::insertEdge(Point from, Point to) {
-    graph[from].push_back({to, {}});
-    graph[to].push_back({from, {}});
+    insertEdge(from, to, {});
     // updateTexture();
 }
 
 // #################### REMOVE #######################
 //
-// ################## FUNCION INSERSECCION ###############
+// ################## FUNCION INTERSECCION ###############
 // Calcula la orientación de tripleta (a, b, c)
 // Devuelve:
 // 0 -> colineales
@@ -259,6 +270,18 @@ void StaticDisplayMap::genRandGraph() {
     updateTextureAll();
 }
 
+void StaticDisplayMap::genArequipa(int mapWidth, int mapHeight) {
+    txtPointsToGraph(mapWidth, mapHeight, "resources/Arequipa-Miraflores.txt");
+}
+
+void StaticDisplayMap::genLima(int mapWidth, int mapHeight) {
+    txtPointsToGraph(mapWidth, mapHeight, "resources/Surco-Lima.txt");
+}
+
+void StaticDisplayMap::genNewYork(int mapWidth, int mapHeight) {
+    txtPointsToGraph(mapWidth, mapHeight, "resources/NewYork-USA.txt");
+}
+
 void StaticDisplayMap::render(sf::RenderWindow& window) {
     window.draw(mapSprite);
 }
@@ -297,6 +320,7 @@ void StaticDisplayMap::updateTextureRoute(){
 }
 
 void StaticDisplayMap::updateTextureAll() {
+    std::cout << "actualizanfo mapa" << std::endl;
     renderTexture.clear(sf::Color::Black);
 
     sf::CircleShape circle(pointSize);
@@ -345,6 +369,121 @@ void StaticDisplayMap::updateTextureAll() {
     mapSprite.setTexture(renderTexture.getTexture());
 }
 
+// vector = 0: old_min, 1: old_max, 2: new_min, 3: new_max)
+double StaticDisplayMap::remap(double value, double range[4]) {
+    if (range[1] == range[0]) {
+        std::cerr << "División por cero en remap (rango inválido)\n";
+        return 0;
+    }
+    std::cout << "valores remap: " << range[0] << " " << range[1] << " " << range[2] << " " << range[3] << std::endl;
+    double result = range[2] + (value - range[0]) * (range[3] - range[2]) / (range[1] - range[0]);
+    std::cout << "result: " << result << "\n";
+    return result;
+}
+
+// 0: o, 1: e, 2: s, 3: n, 4: x1, 5: x2, 6: y1, 7: y2
+std::vector<int> StaticDisplayMap::normalizedPoints(std::vector<double> points, double range[8]) {
+    // Rango original: x ∈ [n, o], y ∈ [e, s]
+    // Nuevo rango:    x ∈ [x1, x2], y ∈ [y1, y2]
+    std::vector<int> normalized;
+
+    // Proteger contra rangos invertidos
+    double oldXmin = std::min(range[3], range[2]); // oeste, este
+    double oldXmax = std::max(range[3], range[2]);
+    double oldYmin = std::min(range[1], range[0]); // sur, norte
+    double oldYmax = std::max(range[1], range[0]);
+
+    double xTmp[4] = {oldXmin, oldXmax, range[4], range[5]};
+    double yTmp[4] = {oldYmin, oldYmax, range[6], range[7]};
+
+    for (int i = 0; i < points.size() / 2; i++) {
+
+        double x = points[i * 2];       // longitud
+        double y = points[i * 2 + 1];   // latitud
+
+        int x_norm = static_cast<int>(remap(x, xTmp));
+        int y_norm = static_cast<int>(remap(y, yTmp));
+
+        std::cout << "x: " << points[i * 2] << " → " << x_norm << "\n";
+        std::cout << "y: " << points[i * 2 + 1] << " → " << y_norm << "\n";
+
+        normalized.push_back(x_norm);
+        normalized.push_back(y_norm);
+    }
+
+    return normalized;
+}
+
+void StaticDisplayMap::txtPointsToGraph(int mapWidth, int mapHeight, std::string path) {
+    std::ifstream file(path);
+    if (!file.is_open()) {
+        std::cerr << "fallo al abrir " << path << "\n";
+        return;
+    }
+    double limitsFile[8];
+    // norte sur este oeste
+    file >> limitsFile[0] >> limitsFile[1] >> limitsFile[2] >> limitsFile[3];
+    std::cout << limitsFile[0] << " "<< limitsFile[1] << " "<< limitsFile[2] << " "<< limitsFile[3] << " ";
+    limitsFile[4] = 0;
+    limitsFile[5] = static_cast<double>(mapWidth);
+    limitsFile[6] = 0;
+    limitsFile[7] = static_cast<double>(mapHeight);
+
+    std::cout << "limpiando grafo\n";
+    graph.clear();
+
+    while (true) {
+        if (file.eof()) break;
+        if (file.fail()) {
+            std::cerr << "error de lectura" << std::endl;
+            return;
+        }
+        std::string line;
+        getline(file, line);
+        if (line.empty()) continue;
+        std::cout << "line: " << line << std::endl;
+        std::stringstream ss(line);
+        double num;
+        std::vector<double> temp;
+        while (ss >> num) {
+            temp.push_back(num);
+        }
+        // normalizar
+        std::cout << "tamaño temp: " << temp.size() << std::endl;
+        std::vector<int> tempInts = normalizedPoints(temp, limitsFile);
+        std::cout << "tamaño tempInts: " << tempInts.size() << std::endl;
+        for (auto e : tempInts) {
+            std::cout << e << " ";
+        }
+        std::cout << "\n";
+        Point source(tempInts[0], tempInts[1]);
+        Point target(tempInts[tempInts.size() - 2], tempInts[tempInts.size() - 1]);
+        std::vector<Point> geometry;
+        std::cout << "tamaño tempInts: " << tempInts.size() << std::endl;
+        if (tempInts.size() > 4) {
+            // obteniendo los puntos de geometry
+            for (int i = 2; i < tempInts.size() / 2 - 2; i += 2) {
+                Point point(tempInts[i], tempInts[i + 1]);
+                geometry.push_back(point);
+            }
+            insertEdge(source, target, {});
+        }
+        else {
+            // no no existe geometry
+            insertEdge(source, target);
+        }
+    }
+    std::cout << "tam grafo: " << graph.size() << std::endl;
+    std::cout << "actualizar grafo" << std::endl;
+    updateTextureAll();
+    file.close();
+}
+
 int StaticDisplayMap::getSizeNodes() const {
     return sizeNodes;
 }
+
+sf::Sprite StaticDisplayMap::getMapSprite() const {
+    return mapSprite;
+}
+

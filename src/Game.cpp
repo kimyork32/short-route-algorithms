@@ -200,6 +200,7 @@ void Game::update() {
     hud.setPosition(posWin.x, posWin.y);
     hud.updateShow(grid.getSizeNodes());
     hud.updateOpt(-1, -1);
+    hud.updateMinimap(posWin, grid.getMapSprite());
 }
 
 void Game::render() {
@@ -225,13 +226,17 @@ void Game::generateMap() {
     switch (hud.getMap()) {
         case Map::RANDOM: 
             grid.genRandGraph();
+            // hud.updateMinimap(posWin, grid.getMapSprite());
             break;
         case Map::LIMA: 
-            //
+            grid.genLima(mapWidth, mapHeight);
             break;
         case Map::AREQUIPA: 
-            //
+            grid.genArequipa(mapWidth, mapHeight);
+            // hud.updateMinimap(posWin, grid.getMapSprite());
+            break;
+        case Map::NEW_YORK: 
+            grid.genNewYork(mapWidth, mapHeight);
             break;
     }
-
 }
