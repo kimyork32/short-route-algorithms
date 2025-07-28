@@ -133,11 +133,13 @@ void Game::processEvents() {
             switch (event.key.code) {
                 case sf::Keyboard::X:
                     std::cout << "remove arist" << std::endl;
-                    if (hud.getMode() != Mode::REMOVE_ARISTS)
+                    if (hud.getMode() != Mode::REMOVE_ARISTS) {
                         hud.setMode(Mode::REMOVE_ARISTS);
-                    else
+                    }
+                    else {
                         waitSecordClick = false;
                         hud.setMode(Mode::NOTHING);
+                    }
                     break;
 
                 case sf::Keyboard::C:

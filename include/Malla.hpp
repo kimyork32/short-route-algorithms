@@ -40,6 +40,7 @@ public:
 
     void genRandGraph();
     void genLima(int mapWidth, int mapHeight);
+    void genArequipa(int mapWidth, int mapHeight);
     void genNewYork(int mapWidth, int mapHeight);
 
     void render(sf::RenderWindow& window);
