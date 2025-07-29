@@ -68,7 +68,7 @@ private:
     int width, height, pointSize;
 
     std::unordered_map<Point, std::vector<std::pair<Point, std::pair<bool, std::vector<Point>>>>> graph;
-    std::vector<std::pair<Point, std::pair<Point, std::vector<Point>>>> route;
+    std::vector<std::pair<Point, Point>> route;
     sf::RenderTexture renderTexture;
     sf::Sprite mapSprite;
     int sizeNodes;

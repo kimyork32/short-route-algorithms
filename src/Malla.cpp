@@ -346,10 +346,79 @@ void StaticDisplayMap::updateTextureUnit(Point* from, Point* to) {
 }
 
 void StaticDisplayMap::updateTextureRoute(){
-    if (!source.isValid() || !target.isValid()) {
-        std::cout << "nodos source y target no iniciados" << std::endl;
+    if (route.empty()) {
+        std::cerr << "ruta vacia" << std::endl;
+        return;
     }
+    for (const auto& [from, to]: route) {
+        auto it = graph.find(from);
+        if (it != graph.end()) {
+            const auto& edgeList = it->second;
+            for (const auto& [to2, edgeData] : edgeList) {
+                if (to2 == to) {
+                    // existe geometry
+                    if (edgeData.first) {
+                        // si geometry esta vacio, entocnes está en el otro nodo 
+                        if (edgeData.second.empty()) {
+                            auto it2 = graph.find(to);
+                            if (it2 != graph.end()) {
+                                const auto& edgeList2 = it2->second;
+                                for (const auto& [to3, edgeData2] : edgeList2) {
+                                    if (to3 == to) {
+                                        Point current = to3;
+                                        const auto& geometry = edgeData2.second;
+                                        for (const Point& node : geometry) {
+                                            sf::VertexArray segment(sf::Lines, 2);
+                                            segment[0].position = sf::Vector2f(current.x, current.y);
+                                            segment[0].color = sf::Color::Blue;
+                                            segment[1].position = sf::Vector2f(node.x, node.y);
+                                            segment[1].color = sf::Color::Blue;
+                                            renderTexture.draw(segment);
+                                        }
 
+                                        sf::VertexArray segment(sf::Lines, 2);
+                                        segment[0].position = sf::Vector2f(current.x, current.y);
+                                        segment[0].color = sf::Color::Blue;
+                                        segment[1].position = sf::Vector2f(to3.x, to3.y);
+                                        segment[1].color = sf::Color::Blue;
+                                        renderTexture.draw(segment);
+                                    }
+                                }
+                            }
+                        }
+                        else {
+                            Point current = from;
+                            const auto& geometry = edgeData.second;
+                            for (const Point& node : geometry) {
+                                sf::VertexArray segment(sf::Lines, 2);
+                                segment[0].position = sf::Vector2f(current.x, current.y);
+                                segment[0].color = sf::Color::Blue;
+                                segment[1].position = sf::Vector2f(node.x, node.y);
+                                segment[1].color = sf::Color::Blue;
+                                renderTexture.draw(segment);
+                            }
+                            sf::VertexArray segment(sf::Lines, 2);
+                            segment[0].position = sf::Vector2f(current.x, current.y);
+                            segment[0].color = sf::Color::Blue;
+                            segment[1].position = sf::Vector2f(to2.x, to2.y);
+                            segment[1].color = sf::Color::Blue;
+                            renderTexture.draw(segment);
+                        }
+                    }
+                    else {
+                        sf::VertexArray segment(sf::Lines, 2);
+                        segment[0].position = sf::Vector2f(from.x, from.y);
+                        segment[0].color = sf::Color::Blue;
+                        segment[1].position = sf::Vector2f(to2.x, to2.y);
+                        segment[1].color = sf::Color::Blue;
+                        renderTexture.draw(segment);
+                    }
+                }
+            }
+        }
+    }
+    renderTexture.display();
+    mapSprite.setTexture(renderTexture.getTexture());
 }
 
 void StaticDisplayMap::updateTextureAll() {
@@ -535,11 +604,21 @@ void StaticDisplayMap::txtPointsToGraph(int mapWidth, int mapHeight, std::string
     std::cout << "tam grafo: " << graph.size() << std::endl;
     std::cout << "actualizar grafo" << std::endl;
     updateTextureAll();
-    
-    Point p1(100, 100);
-    Point p2(100, 300);
 
-    std::cout << "distance: " << getDistance(p1, p2) << std::endl;
+    // 100 300 200 300
+    // 200 300 150 400
+    // 150 400 600 200
+    // 600 200 300 100
+
+    route = {
+        {{100, 300}, {200, 300}},
+        {{200, 300}, {150, 400}},
+        {{150, 400}, {600, 200}},
+        {{600, 200}, {300, 100}}
+    };
+
+    updateTextureRoute();
+
     file.close();
 }
 
