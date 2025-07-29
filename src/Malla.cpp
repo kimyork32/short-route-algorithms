@@ -17,8 +17,8 @@ StaticDisplayMap::StaticDisplayMap(int width, int height, int size, int sizeNode
 {
 
     renderTexture.create(width, height);
-    startNode = {-1, -1};
-    endNode = {-1, -1};
+    source = {-1, -1};
+    target = {-1, -1};
     genRandGraph();
     // genArequipa(10000, 10000);
 }
@@ -100,8 +100,14 @@ void StaticDisplayMap::insertPoint(Point node) {
 }
 
 void StaticDisplayMap::insertEdge(Point from, Point to, const std::vector<Point>& geometry) {
-    graph[from].push_back({to, geometry});
-    graph[to].push_back({from, geometry});
+    if (!geometry.empty()) {
+        graph[from].push_back({to, {true, geometry}});
+        graph[to].push_back({from, {true, {}}});
+    }
+    else {
+        graph[from].push_back({to, {false, {}}});
+        graph[to].push_back({from, {false, {}}});
+    }
     // updateTexture();
 }
 
@@ -163,7 +169,7 @@ void StaticDisplayMap::removeNodeWindow(Point node) {
         for (auto& [from, edge] : graph) {
             edge.erase(
                 std::remove_if(edge.begin(), edge.end(),
-                    [&](const std::pair<Point, std::vector<Point>>& e) {
+                    [&](const std::pair<Point, std::pair<bool, std::vector<Point>>>& e) {
                         return e.first == p;
                     }
                 ),
@@ -181,7 +187,7 @@ void StaticDisplayMap::removeEdgeWindow(Point from, Point to) {
     for (auto& [from2, edge] : graph) {
         edge.erase(
             std::remove_if(edge.begin(), edge.end(),
-                [&](const std::pair<Point, std::vector<Point>>& e) {
+                [&](const std::pair<Point, std::pair<bool, std::vector<Point>>>& e) {
                     const Point& to2 = e.first;
                     bool c = ifIntersect(from, to, from2, to2);
                     if (c) {
@@ -200,23 +206,51 @@ void StaticDisplayMap::removeEdgeWindow(Point from, Point to) {
     }
 }
 
-void  StaticDisplayMap::insertStartEndNode(Point from, Point to) {
-    startNode = from;
-    endNode = to;
+void  StaticDisplayMap::insertStartEndNode(Point source, Point target) {
+    this->source = source;
+    this->target = target;
 }
 
-float StaticDisplayMap::getDistance(Point& from, Point& to) {
+float StaticDisplayMap::getDistanceNodes(const Point& from, const Point& to) {
     return std::sqrtl(std::pow(from.x - to.x, 2) + std::pow(from.y - to.y, 2));
 }
 
+float StaticDisplayMap::getDistance(Point& from, Point& to) {
+    auto it = graph.find(from);
+    if (it != graph.end()) {
+        const auto& edgeList = it->second;
+        for (const auto& [to2, edgedata] : edgeList) {
+            if (to2 == to) {
+                if (edgedata.first) {
+                    float distance = 0.f;
+                    Point current = from;
+                    const auto& geometry = edgedata.second;
+                    for (const Point& node : geometry) {
+                        distance += getDistanceNodes(current, node);
+                        current = node;
+                    }
+                    distance += getDistanceNodes(current, to);
+                    return distance;
+                }
+                else {
+                    break;
+                }
+            }
+        }
+    }
+    return getDistanceNodes(from, to);
+}
+
 void StaticDisplayMap::dijkstra() {
-    if (!startNode.isValid() || !endNode.isValid()) {
+    if (!source.isValid() || !target.isValid()) {
         std::cout << "nodos start y end no iniciados" << std::endl;
     }
+
 }
 
 void StaticDisplayMap::aStar() {
-
+    // TODO
+    // route = {};
 }
 
 void StaticDisplayMap::genRandGraph() {
@@ -225,7 +259,6 @@ void StaticDisplayMap::genRandGraph() {
     using Delaunay = CGAL::Delaunay_triangulation_2<Kernel>;
     using CGALPoint = Kernel::Point_2;
 
-    // Generador aleatorio
     std::random_device rd;
     std::mt19937 gen(rd());
     // std::uniform_int_distribution<> distrib(0, coordMax);
@@ -240,20 +273,16 @@ void StaticDisplayMap::genRandGraph() {
         puntos.emplace_back(x, y);
     }
 
-    // triangulacion
     Delaunay dt;
     dt.insert(puntos.begin(), puntos.end());
 
-    // limpiar el grafo
     graph.clear();
 
-    // insertar puntos como nodos
     for (const auto& p : puntos) {
         Point pt{static_cast<int>(p.x()), static_cast<int>(p.y())};
         insertPoint(pt);
     }
 
-    // insertar aristas bidireccionales
     for (auto it = dt.finite_edges_begin(); it != dt.finite_edges_end(); ++it) {
         auto face = it->first;
         int i = it->second;
@@ -264,8 +293,11 @@ void StaticDisplayMap::genRandGraph() {
         Point p1{static_cast<int>(v1.x()), static_cast<int>(v1.y())};
         Point p2{static_cast<int>(v2.x()), static_cast<int>(v2.y())};
 
-        graph[p1].emplace_back(p2, std::vector<Point>{});
-        graph[p2].emplace_back(p1, std::vector<Point>{});
+        // graph[p1].emplace_back(p2, std::vector<Point>{false, {}});
+        // graph[p2].emplace_back(p1, std::vector<Point>{false, {}});
+
+        graph[p1].emplace_back(p2, std::pair<bool, std::vector<Point>>{false, {}});
+        graph[p2].emplace_back(p1, std::pair<bool, std::vector<Point>>{false, {}});
     }
     updateTextureAll();
 }
@@ -314,38 +346,62 @@ void StaticDisplayMap::updateTextureUnit(Point* from, Point* to) {
 }
 
 void StaticDisplayMap::updateTextureRoute(){
-    if (!startNode.isValid() || !endNode.isValid()) {
-        std::cout << "nodos start y end no iniciados" << std::endl;
+    if (!source.isValid() || !target.isValid()) {
+        std::cout << "nodos source y target no iniciados" << std::endl;
     }
+
 }
 
 void StaticDisplayMap::updateTextureAll() {
-    std::cout << "actualizanfo mapa" << std::endl;
+    // std::cout << "actualizanfo mapa" << std::endl;
     renderTexture.clear(sf::Color::Black);
 
     sf::CircleShape circle(pointSize);
     circle.setOrigin(pointSize, pointSize);
     
     for (const auto& [from, edge] : graph) {
-        for (const auto& [to, path] : edge) {
-            // Si hay puntos intermedios (path), dibujarlos como líneas consecutivas
-            if (!path.empty()) {
+        for (const auto& [to, edgeData] : edge) {
+            const auto& [isGeo, geometry] = edgeData;
+            // Si hay puntos intermedios (geometry), dibujarlos como líneas consecutivas
+            std::vector<Point> tempGeometry = geometry;
+            if (isGeo && geometry.empty()) {
+                continue;
+            }
+            if (!geometry.empty()) {
+            // if (isGeo) {
+                // if (tempGeometry.empty()) {
+                //     auto it = graph.find(to);
+                //     if (it != graph.end()) {
+                //         const auto& edgeList = it->second;
+                //         for (const auto& [to2, edgeData2] : edgeList) {
+                //             if (to2 == from) {
+                //                 const auto& backGeometry = edgeData2.second;
+                //                 tempGeometry = backGeometry;
+                //                 break;
+                //             }
+                //         }
+                //     }
+                // }
+                // std::cout << "tempGeometry.size(): " << tempGeometry.size() << std::endl;
                 Point current = from;
-                for (const auto& mid : path) {
+                for (const auto& mid : tempGeometry) {
                     sf::VertexArray segment(sf::Lines, 2);
                     segment[0].position = sf::Vector2f(current.x, current.y);
-                    segment[0].color = sf::Color::Green;
+                    segment[0].color = sf::Color::White;
                     segment[1].position = sf::Vector2f(mid.x, mid.y);
-                    segment[1].color = sf::Color::Green;
+                    segment[1].color = sf::Color::White;
+                    // std::cout << "segment: " << current.x << " " << current.y << " | " << mid.x << " " << mid.y << "\n";
+                    
                     renderTexture.draw(segment);
                     current = mid;
                 }
                 // Último tramo: del último intermedio a `to`
                 sf::VertexArray finalSegment(sf::Lines, 2);
                 finalSegment[0].position = sf::Vector2f(current.x, current.y);
-                finalSegment[0].color = sf::Color::Green;
+                finalSegment[0].color = sf::Color::White;
                 finalSegment[1].position = sf::Vector2f(to.x, to.y);
-                finalSegment[1].color = sf::Color::Green;
+                finalSegment[1].color = sf::Color::White;
+                // std::cout << "segment final: " << current.x << " " << current.y << " | " << to.x << " " << to.y << "\n";
                 renderTexture.draw(finalSegment);
             }
             else {
@@ -462,11 +518,14 @@ void StaticDisplayMap::txtPointsToGraph(int mapWidth, int mapHeight, std::string
         std::cout << "tamaño tempInts: " << tempInts.size() << std::endl;
         if (tempInts.size() > 4) {
             // obteniendo los puntos de geometry
-            for (int i = 2; i < tempInts.size() / 2 - 2; i += 2) {
+            for (int i = 2; i < tempInts.size() - 2; i += 2) {
                 Point point(tempInts[i], tempInts[i + 1]);
                 geometry.push_back(point);
             }
-            insertEdge(source, target, {});
+            std::cout << "geometry: ";
+            for (Point e : geometry) std::cout << e.x << " " << e.y << " ";
+            std::cout << "\n";
+            insertEdge(source, target, geometry);
         }
         else {
             // no no existe geometry
@@ -476,6 +535,11 @@ void StaticDisplayMap::txtPointsToGraph(int mapWidth, int mapHeight, std::string
     std::cout << "tam grafo: " << graph.size() << std::endl;
     std::cout << "actualizar grafo" << std::endl;
     updateTextureAll();
+    
+    Point p1(100, 100);
+    Point p2(100, 300);
+
+    std::cout << "distance: " << getDistance(p1, p2) << std::endl;
     file.close();
 }
 

@@ -35,6 +35,7 @@ public:
     void removeEdgeWindow(Point from, Point to);
 
     float getDistance(Point& from, Point& to);
+    float getDistanceNodes(const Point& from, const Point& to);
     void dijkstra();
     void aStar();
 
@@ -66,14 +67,15 @@ public:
 private:
     int width, height, pointSize;
 
-    std::unordered_map<Point, std::vector<std::pair<Point, std::vector<Point>>>> graph;
+    std::unordered_map<Point, std::vector<std::pair<Point, std::pair<bool, std::vector<Point>>>>> graph;
     std::vector<std::pair<Point, std::pair<Point, std::vector<Point>>>> route;
     sf::RenderTexture renderTexture;
     sf::Sprite mapSprite;
     int sizeNodes;
-    Point startNode;
-    Point endNode;
 
+    // para ruta
+    Point source;
+    Point target;
 };
 
 #endif
