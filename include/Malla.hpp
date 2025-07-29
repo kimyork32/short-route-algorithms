@@ -46,6 +46,8 @@ public:
 
     void render(sf::RenderWindow& window);
     void updateTextureUnit(Point* from, Point* to);
+    void updateTexturePoint(Point* node, sf::Color color);
+    void updateTextureUnit(Point* from, Point* to, sf::Color color);
     void updateTextureRoute();
     void updateTextureAll();
     void updateMinimap();

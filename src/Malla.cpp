@@ -207,8 +207,20 @@ void StaticDisplayMap::removeEdgeWindow(Point from, Point to) {
 }
 
 void  StaticDisplayMap::insertStartEndNode(Point source, Point target) {
-    this->source = source;
-    this->target = target;
+    const Point* s = getPointIfExists(source);
+    const Point* t = getPointIfExists(target);
+    if (!s || !t) {
+        std::cerr << "no existe un nodo seleccionado. intente de nuevo\n";
+        return;
+    }
+
+    Point cS = *s;
+    Point cT = *t;
+
+    this->source = cS;
+    this->target = cT;
+    updateTexturePoint(&cS, sf::Color::Green);
+    updateTexturePoint(&cT, sf::Color::Green);
 }
 
 float StaticDisplayMap::getDistanceNodes(const Point& from, const Point& to) {
@@ -318,13 +330,26 @@ void StaticDisplayMap::render(sf::RenderWindow& window) {
     window.draw(mapSprite);
 }
 
+
+void StaticDisplayMap::updateTexturePoint(Point* node, sf::Color color) {
+    sf::CircleShape circle(pointSize);
+    circle.setOrigin(pointSize, pointSize);
+    circle.setPosition(node->x, node->y);
+    circle.setFillColor(color);
+    renderTexture.draw(circle);
+}
+
 void StaticDisplayMap::updateTextureUnit(Point* from, Point* to) {
+    updateTextureUnit(from, to, sf::Color::White);
+}
+
+void StaticDisplayMap::updateTextureUnit(Point* from, Point* to, sf::Color color) {
     if (from && to) {
         sf::VertexArray finalSegment(sf::Lines, 2);
         finalSegment[0].position = sf::Vector2f(from->x, from->y);
         finalSegment[0].color = sf::Color::White;
         finalSegment[1].position = sf::Vector2f(to->x, to->y);
-        finalSegment[1].color = sf::Color::White;
+        finalSegment[1].color = color;
         renderTexture.draw(finalSegment);
     }
     if (from) {

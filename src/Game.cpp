@@ -112,8 +112,9 @@ void Game::processEvents() {
                             grid.removeNodeWindow(mousePos);
                         }
                         break;
+
                     case Mode:: SELECT_START_END_NODE: 
-                        // std::cout << "mode insert start_end_node" << std::endl;
+                        std::cout << "mode insert start_end_node" << std::endl;
                         if (event.mouseButton.button == sf::Mouse::Left) {
                             if (waitSecordClick) {
                                 grid.insertStartEndNode(firstClick, mousePos);
@@ -160,6 +161,13 @@ void Game::processEvents() {
                 case sf::Keyboard::T:
                     if (hud.getMode() != Mode::INSERT_ARIST)
                         hud.setMode(Mode::INSERT_ARIST);
+                    else
+                        hud.setMode(Mode::NOTHING);
+                    break;
+
+                case sf::Keyboard::H:
+                    if (hud.getMode() != Mode::SELECT_START_END_NODE)
+                        hud.setMode(Mode::SELECT_START_END_NODE);
                     else
                         hud.setMode(Mode::NOTHING);
                     break;
