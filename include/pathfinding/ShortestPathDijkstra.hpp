@@ -85,7 +85,7 @@ public:
             // Explorar todos los vecinos del nodo actual
             auto nodeIterator = graph.find(currentNode);
             if (nodeIterator != graph.end()) {
-                for (const auto& [neighborNode, routeGeometry] : nodeIterator->second) {
+                for (const auto& [neighborNode, edgeData] : nodeIterator->second) {
                     
                     // Si ya procesamos este vecino, skip
                     if (processedNodes.count(neighborNode)) {
@@ -93,7 +93,7 @@ public:
                     }
                     
                     // Calcular nueva distancia pasando por el nodo actual
-                    double edgeWeight = calculateRealDistance(currentNode, neighborNode, routeGeometry);
+                    double edgeWeight = calculateRealDistance(currentNode, neighborNode, edgeData);
                     double newDistance = currentDistance + edgeWeight;
                     
                     // ¿Encontramos un camino mejor a este vecino?

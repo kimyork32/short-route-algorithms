@@ -88,7 +88,7 @@ public:
             // Explorar vecinos
             auto nodeIterator = graph.find(currentNode);
             if (nodeIterator != graph.end()) {
-                for (const auto& [neighborNode, routeGeometry] : nodeIterator->second) {
+                for (const auto& [neighborNode, edgeData] : nodeIterator->second) {
                     
                     // Si ya procesamos este vecino, skip
                     if (closedSet.count(neighborNode)) {
@@ -96,7 +96,7 @@ public:
                     }
                     
                     // Calcular g(n) tentativo para el vecino
-                    double edgeWeight = calculateRealDistance(currentNode, neighborNode, routeGeometry);
+                    double edgeWeight = calculateRealDistance(currentNode, neighborNode, edgeData);
                     double tentativeGScore = gScore[currentNode] + edgeWeight;
                     
                     // ¿Es este un camino mejor al vecino?

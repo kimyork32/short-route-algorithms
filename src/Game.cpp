@@ -225,10 +225,10 @@ void Game::render() {
 void Game::calculateRoute() {
     switch (hud.getAlg()) {
         case Algorithm::DIJKSTRA: 
-            grid.dijkstra();
+            grid.executePathfindingDijkstra();
             break;
         case Algorithm::A_STAR: 
-            grid.aStar();
+            grid.executePathfindingAStar();
             break;
     }
 }

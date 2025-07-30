@@ -10,17 +10,6 @@
 #include "pathfinding/ShortestPathDijkstra.hpp"
 #include "pathfinding/ShortestPathAStar.hpp"
 
-namespace std {
-    template <>
-    struct hash<Point> {
-        std::size_t operator()(const Point& p) const noexcept {
-            std::size_t hx = std::hash<int>{}(p.x);
-            std::size_t hy = std::hash<int>{}(p.y);
-            return hx ^ (hy << 1);
-        }
-    };
-}
-
 class StaticDisplayMap {
 public:
     StaticDisplayMap(int width, int height, int pointSize, int sizeNodes);
