@@ -27,7 +27,7 @@ private:
     const int mapHeight = 10000;
 
     const int pointSize = 3;
-    const int sizeNodes = 100000;
+    const int sizeNodes = 1000000;
     const float cameraSpeed = 10.0f;
 
     sf::Vector2i firstClick;

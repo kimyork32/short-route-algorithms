@@ -2,6 +2,7 @@
 #include <iostream>
 #include <random>
 #include <fstream>
+#include <chrono>
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Delaunay_triangulation_2.h>
 
@@ -19,19 +20,29 @@ StaticDisplayMap::StaticDisplayMap(int width, int height, int size, int sizeNode
     renderTexture.create(width, height);
     source = {-1, -1};
     target = {-1, -1};
-    genRandGraph();
-    // genArequipa(10000, 10000);
+    // genRandGraph();
+    genLima(10000, 10000);
 }
 
 
 const Point* StaticDisplayMap::getPointIfExists(Point& point) {
-    // preguntar si point colisiona con alguno de esots puntos con el tamaño de 3 (radio ciruclar)
-    for (const auto& [from, edge] : graph) {
-        // verificar colision
-        if (pow(point.x - from.x, 2) + pow(point.y - from.y, 2) < pow(pointSize, 2))
-            return &from;
+    for (int i = point.x - pointSize; i < point.x + pointSize; i++) {
+        for (int j = point.y - pointSize; j < point.y + pointSize; j++) {
+            Point p = {i, j};
+            auto it = graph.find(p);
+            if (it != graph.end()) {
+                return &(it->first);
+            }
+        }
     }
     return nullptr;
+    // // preguntar si point colisiona con alguno de esots puntos con el tamaño de 3 (radio ciruclar)
+    // for (const auto& [from, edge] : graph) {
+    //     // verificar colision
+    //     if (pow(point.x - from.x, 2) + pow(point.y - from.y, 2) < pow(pointSize, 2))
+    //         return &from;
+    // }
+    // return nullptr;
 }
 
 bool StaticDisplayMap::existsEdge(Point& from, Point& to) {
@@ -165,25 +176,44 @@ void StaticDisplayMap::removeNodeWindow(Point node) {
     const Point* n = getPointIfExists(node);
     if (n) {
         // std::cout << "existe nodo a remover" << std::endl;
-        Point p = *n;
-        for (auto& [from, edge] : graph) {
-            edge.erase(
-                std::remove_if(edge.begin(), edge.end(),
-                    [&](const std::pair<Point, std::pair<bool, std::vector<Point>>>& e) {
-                        return e.first == p;
-                    }
-                ),
-                edge.end()
+        // Point p = *n;
+        auto from = graph.find(*n);
+        const auto& edgeList = from->second;
+        for (auto& [to, edgeData] : edgeList) {
+            if (edgeData.first) {
+                Point current = from->first;
+                for (const auto& mid : edgeData.second) {
+                    drawSegment(&current, &mid, sf::Color::Black);
+                    current = mid;
+                }
+                drawSegment(&current, &to, sf::Color::Black);
+            } else {
+                drawSegment(&from->first, &to, sf::Color::Black);
+            }
+            drawCircle(&to, sf::Color::Red);
+
+            auto it = graph.find(to);
+            auto& edgeList2 = it->second;
+            edgeList2.erase(
+                std::remove_if(edgeList2.begin(), edgeList2.end(),
+                               [&](const auto& node) {
+                                    return node.first == *n;
+                               }),
+                edgeList2.end()
             );
         }
-        graph.erase(p);
-        updateTextureAll();
+        drawCircle(&from->first, sf::Color::Black);
+        renderTexture.display();
+        mapSprite.setTexture(renderTexture.getTexture());
+        graph.erase(from);
+        // updateTextureAll();
     }
 }
 
 void StaticDisplayMap::removeEdgeWindow(Point from, Point to) {
-    bool change = false;
+    // bool change = false;
     // std::cout << "removiento arista" << std::endl;
+    std::cout << "removiendo de edge inicio\n";
     for (auto& [from2, edge] : graph) {
         edge.erase(
             std::remove_if(edge.begin(), edge.end(),
@@ -191,8 +221,8 @@ void StaticDisplayMap::removeEdgeWindow(Point from, Point to) {
                     const Point& to2 = e.first;
                     bool c = ifIntersect(from, to, from2, to2);
                     if (c) {
-                        // std::cout << "se intersecan (" << from2.x << ", " << from2.y << "), (" << to.x << ", " << to.y << ")" << std::endl;
-                        change = true;
+                        removeVisualRoute(&from2, &to2);
+                        // change = true;
 
                     }
                     return c;
@@ -201,9 +231,10 @@ void StaticDisplayMap::removeEdgeWindow(Point from, Point to) {
             edge.end()
         );
     }
-    if (change) {
-        updateTextureAll();
-    }
+    std::cout << "removiendo de edge fin\n";
+    // if (change) {
+    //     // updateTextureAll();
+    // }
 }
 
 void  StaticDisplayMap::insertStartEndNode(Point source, Point target) {
@@ -257,7 +288,6 @@ void StaticDisplayMap::dijkstra() {
     if (!source.isValid() || !target.isValid()) {
         std::cout << "nodos start y end no iniciados" << std::endl;
     }
-
 }
 
 void StaticDisplayMap::aStar() {
@@ -267,6 +297,9 @@ void StaticDisplayMap::aStar() {
 
 void StaticDisplayMap::genRandGraph() {
     std::cout << "creando mapa random" << std::endl;
+
+    auto start = std::chrono::high_resolution_clock::now();
+
     using Kernel = CGAL::Exact_predicates_inexact_constructions_kernel;
     using Delaunay = CGAL::Delaunay_triangulation_2<Kernel>;
     using CGALPoint = Kernel::Point_2;
@@ -287,6 +320,17 @@ void StaticDisplayMap::genRandGraph() {
 
     Delaunay dt;
     dt.insert(puntos.begin(), puntos.end());
+
+    // Finalizar medición de tiempo
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::duration<double>>(end - start);
+
+    std::cout << "Tiempo de ejecución: " << duration.count() << " segundos\n";
+
+    std::cout << "puntos de triangulacion creadas\n";
+
+
+    start = std::chrono::high_resolution_clock::now();
 
     graph.clear();
 
@@ -311,7 +355,20 @@ void StaticDisplayMap::genRandGraph() {
         graph[p1].emplace_back(p2, std::pair<bool, std::vector<Point>>{false, {}});
         graph[p2].emplace_back(p1, std::pair<bool, std::vector<Point>>{false, {}});
     }
+
+    // Finalizar medición de tiempo
+    end = std::chrono::high_resolution_clock::now();
+    duration = std::chrono::duration_cast<std::chrono::duration<double>>(end - start);
+
+    std::cout << "Tiempo de ejecución: " << duration.count() << " segundos\n";
+
+    start = std::chrono::high_resolution_clock::now();
     updateTextureAll();
+
+    // Finalizar medición de tiempo
+    end = std::chrono::high_resolution_clock::now();
+    duration = std::chrono::duration_cast<std::chrono::duration<double>>(end - start);
+    std::cout << "Tiempo de ejecución: " << duration.count() << " segundos\n";
 }
 
 void StaticDisplayMap::genArequipa(int mapWidth, int mapHeight) {
@@ -339,36 +396,64 @@ void StaticDisplayMap::updateTexturePoint(Point* node, sf::Color color) {
     renderTexture.draw(circle);
 }
 
-void StaticDisplayMap::updateTextureUnit(Point* from, Point* to) {
-    updateTextureUnit(from, to, sf::Color::White);
+void StaticDisplayMap::removeVisualRoute(const Point* from, const Point* to) {
+    auto it = graph.find(*from);
+    const auto& edge = it->second;
+    for (const auto& [node, edgeData] : edge) {
+        if (node == *to) {
+            if (edgeData.first) {
+                Point current = *from;
+                for (const auto& mid : edgeData.second) {
+                    drawSegment(&current, &mid, sf::Color::Black);
+                    current = mid;
+                }
+                drawSegment(&current, to, sf::Color::Black);
+            }
+            else {
+                drawSegment(from, to, sf::Color::Black);
+            }
+            drawCircle(from, sf::Color::Red);
+            drawCircle(to, sf::Color::Red);
+            return;
+        }
+    }
 }
 
-void StaticDisplayMap::updateTextureUnit(Point* from, Point* to, sf::Color color) {
+void StaticDisplayMap::drawSegment(const Point* from, const Point* to, sf::Color color) {
+    sf::VertexArray segment(sf::Lines, 2);
+    segment[0].position = sf::Vector2f(from->x, from->y);
+    segment[0].color = color;
+    segment[1].position = sf::Vector2f(to->x, to->y);
+    segment[1].color = color;
+    renderTexture.draw(segment);
+}
+
+void StaticDisplayMap::drawCircle(const Point* node, sf::Color color) {
+    sf::CircleShape circle(pointSize);
+    circle.setOrigin(pointSize, pointSize);
+    circle.setPosition(node->x, node->y);
+    circle.setFillColor(color);
+    renderTexture.draw(circle);
+}
+
+void StaticDisplayMap::updateTextureUnit(Point* from, Point* to) {
+    updateTextureUnit(from, to, sf::Color::White, sf::Color::Red);
+}
+
+void StaticDisplayMap::updateTextureUnit(Point* from, Point* to, sf::Color colorSegment, sf::Color colorPoints) {
     if (from && to) {
-        sf::VertexArray finalSegment(sf::Lines, 2);
-        finalSegment[0].position = sf::Vector2f(from->x, from->y);
-        finalSegment[0].color = sf::Color::White;
-        finalSegment[1].position = sf::Vector2f(to->x, to->y);
-        finalSegment[1].color = color;
-        renderTexture.draw(finalSegment);
+        drawSegment(from, to, colorSegment);
     }
     if (from) {
-        sf::CircleShape circle(pointSize);
-        circle.setOrigin(pointSize, pointSize);
-        circle.setPosition(from->x, from->y);
-        circle.setFillColor(sf::Color::Red);
-        renderTexture.draw(circle);
+        drawCircle(from, colorPoints);
     }
     if (to) {
-        sf::CircleShape circle(pointSize);
-        circle.setOrigin(pointSize, pointSize);
-        circle.setPosition(to->x, to->y);
-        circle.setFillColor(sf::Color::Red);
-        renderTexture.draw(circle);
+        drawCircle(to, colorPoints);
     }
     renderTexture.display();
     mapSprite.setTexture(renderTexture.getTexture());
 }
+
 
 void StaticDisplayMap::updateTextureRoute(){
     if (route.empty()) {
@@ -447,7 +532,7 @@ void StaticDisplayMap::updateTextureRoute(){
 }
 
 void StaticDisplayMap::updateTextureAll() {
-    // std::cout << "actualizanfo mapa" << std::endl;
+    std::cout << "actualizando mapa" << std::endl;
     renderTexture.clear(sf::Color::Black);
 
     sf::CircleShape circle(pointSize);

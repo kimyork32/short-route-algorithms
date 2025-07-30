@@ -44,13 +44,18 @@ public:
     void genArequipa(int mapWidth, int mapHeight);
     void genNewYork(int mapWidth, int mapHeight);
 
+    void removeVisualRoute(const Point* from, const Point* to);
+    void drawSegment(const Point* from, const Point* to, sf::Color color);
+    void drawCircle(const Point* node, sf::Color color);
+
     void render(sf::RenderWindow& window);
-    void updateTextureUnit(Point* from, Point* to);
     void updateTexturePoint(Point* node, sf::Color color);
-    void updateTextureUnit(Point* from, Point* to, sf::Color color);
+    void updateTextureUnit(Point* from, Point* to);
+    void updateTextureUnit(Point* from, Point* to, sf::Color color, sf::Color colorPoints);
+    void updateTextureSegment(Point* from, Point* to);
     void updateTextureRoute();
     void updateTextureAll();
-    void updateMinimap();
+    // void updateMinimap();
     
     int orientation(const Point& a, const Point& b, const Point& c);
     bool inSegment(const Point& a, const Point& b, const Point& c);
