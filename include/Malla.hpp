@@ -6,6 +6,9 @@
 #include <vector>
 #include <functional>
 #include "Point.hpp"
+#include "GraphAlgorithmBase.hpp"
+#include "pathfinding/ShortestPathDijkstra.hpp"
+#include "pathfinding/ShortestPathAStar.hpp"
 
 namespace std {
     template <>
@@ -36,8 +39,12 @@ public:
 
     float getDistance(Point& from, Point& to);
     float getDistanceNodes(const Point& from, const Point& to);
-    void dijkstra();
-    void aStar();
+    
+    // ALGORITMOS DE PATHFINDING
+    bool executePathfindingDijkstra();
+    bool executePathfindingAStar();
+    void clearCurrentPath();
+    void printPathStatistics() const;
 
     void genRandGraph();
     void genLima(int mapWidth, int mapHeight);
@@ -78,6 +85,11 @@ private:
     // para ruta
     Point source;
     Point target;
+    
+    // Instancias de algoritmos
+    ShortestPathDijkstra dijkstraAlgorithm;
+    ShortestPathAStar astarAlgorithm;
+    PathfindingResult currentPathResult;
 };
 
 #endif

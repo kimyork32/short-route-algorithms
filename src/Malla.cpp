@@ -253,16 +253,78 @@ float StaticDisplayMap::getDistance(Point& from, Point& to) {
     return getDistanceNodes(from, to);
 }
 
-void StaticDisplayMap::dijkstra() {
-    if (!source.isValid() || !target.isValid()) {
-        std::cout << "nodos start y end no iniciados" << std::endl;
-    }
+// ========================
+// IMPLEMENTACIÓN DE ALGORITMOS DE PATHFINDING
+// ========================
 
+bool StaticDisplayMap::executePathfindingDijkstra() {
+    if (!source.isValid() || !target.isValid()) {
+        std::cout << "Error: Nodos de inicio y/o destino no están definidos" << std::endl;
+        return false;
+    }
+    
+    std::cout << "\n=== EJECUTANDO DIJKSTRA ===" << std::endl;
+    
+    // Limpiar resultado anterior
+    currentPathResult.clear();
+    
+    // Ejecutar algoritmo
+    currentPathResult = dijkstraAlgorithm.findShortestPath(graph, source, target);
+    
+    // Mostrar estadísticas
+    currentPathResult.printStatistics();
+    
+    // Actualizar visualización si se encontró camino
+    if (currentPathResult.pathFound) {
+        updateTextureRoute();
+        std::cout << "Dijkstra: Camino dibujado en el mapa" << std::endl;
+        return true;
+    } else {
+        std::cout << "Dijkstra: No se pudo encontrar un camino" << std::endl;
+        return false;
+    }
 }
 
-void StaticDisplayMap::aStar() {
-    // TODO
-    // route = {};
+bool StaticDisplayMap::executePathfindingAStar() {
+    if (!source.isValid() || !target.isValid()) {
+        std::cout << "Error: Nodos de inicio y/o destino no están definidos" << std::endl;
+        return false;
+    }
+    
+    std::cout << "\n=== EJECUTANDO A* ===" << std::endl;
+    
+    // Limpiar resultado anterior
+    currentPathResult.clear();
+    
+    // Ejecutar algoritmo
+    currentPathResult = astarAlgorithm.findShortestPath(graph, source, target);
+    
+    // Mostrar estadísticas
+    currentPathResult.printStatistics();
+    
+    // Actualizar visualización si se encontró camino
+    if (currentPathResult.pathFound) {
+        updateTextureRoute();
+        std::cout << "A*: Camino dibujado en el mapa" << std::endl;
+        return true;
+    } else {
+        std::cout << "A*: No se pudo encontrar un camino" << std::endl;
+        return false;
+    }
+}
+
+void StaticDisplayMap::clearCurrentPath() {
+    currentPathResult.clear();
+    route.clear();
+    updateTextureAll(); // Redibujar mapa sin el camino
+}
+
+void StaticDisplayMap::printPathStatistics() const {
+    if (!currentPathResult.isEmpty()) {
+        currentPathResult.printStatistics();
+    } else {
+        std::cout << "No hay resultado de pathfinding disponible" << std::endl;
+    }
 }
 
 void StaticDisplayMap::genRandGraph() {
@@ -371,10 +433,33 @@ void StaticDisplayMap::updateTextureUnit(Point* from, Point* to, sf::Color color
 }
 
 void StaticDisplayMap::updateTextureRoute(){
+    // Versión híbrida: usar currentPathResult si está disponible, sino usar route
+    sf::Color pathColor = sf::Color::Blue; // Color por defecto
+    
+    // Determinar color según el algoritmo usado
+    if (!currentPathResult.isEmpty()) {
+        if (currentPathResult.algorithmName == "Dijkstra") {
+            pathColor = sf::Color::Blue;
+        } else if (currentPathResult.algorithmName == "A* (A-Star)") {
+            pathColor = sf::Color::Yellow;
+        }
+        
+        // Convertir currentPathResult a route para usar la geometría real
+        route.clear();
+        for (size_t i = 0; i < currentPathResult.optimalPath.size() - 1; ++i) {
+            route.push_back({currentPathResult.optimalPath[i], currentPathResult.optimalPath[i + 1]});
+        }
+        
+        std::cout << "Dibujando camino de " << currentPathResult.algorithmName 
+                  << " con " << currentPathResult.optimalPath.size() << " nodos" << std::endl;
+    }
+    
     if (route.empty()) {
         std::cerr << "ruta vacia" << std::endl;
         return;
     }
+    
+    // Dibujar el camino respetando la geometría real de las calles
     for (const auto& [from, to]: route) {
         auto it = graph.find(from);
         if (it != graph.end()) {
@@ -383,30 +468,31 @@ void StaticDisplayMap::updateTextureRoute(){
                 if (to2 == to) {
                     // existe geometry
                     if (edgeData.first) {
-                        // si geometry esta vacio, entocnes está en el otro nodo 
+                        // si geometry esta vacio, entonces está en el otro nodo 
                         if (edgeData.second.empty()) {
                             auto it2 = graph.find(to);
                             if (it2 != graph.end()) {
                                 const auto& edgeList2 = it2->second;
                                 for (const auto& [to3, edgeData2] : edgeList2) {
-                                    if (to3 == to) {
-                                        Point current = to3;
+                                    if (to3 == from) {
+                                        Point current = from;
                                         const auto& geometry = edgeData2.second;
                                         for (const Point& node : geometry) {
                                             sf::VertexArray segment(sf::Lines, 2);
                                             segment[0].position = sf::Vector2f(current.x, current.y);
-                                            segment[0].color = sf::Color::Blue;
+                                            segment[0].color = pathColor;
                                             segment[1].position = sf::Vector2f(node.x, node.y);
-                                            segment[1].color = sf::Color::Blue;
+                                            segment[1].color = pathColor;
                                             renderTexture.draw(segment);
+                                            current = node;
                                         }
-
                                         sf::VertexArray segment(sf::Lines, 2);
                                         segment[0].position = sf::Vector2f(current.x, current.y);
-                                        segment[0].color = sf::Color::Blue;
-                                        segment[1].position = sf::Vector2f(to3.x, to3.y);
-                                        segment[1].color = sf::Color::Blue;
+                                        segment[0].color = pathColor;
+                                        segment[1].position = sf::Vector2f(to.x, to.y);
+                                        segment[1].color = pathColor;
                                         renderTexture.draw(segment);
+                                        break;
                                     }
                                 }
                             }
@@ -417,31 +503,54 @@ void StaticDisplayMap::updateTextureRoute(){
                             for (const Point& node : geometry) {
                                 sf::VertexArray segment(sf::Lines, 2);
                                 segment[0].position = sf::Vector2f(current.x, current.y);
-                                segment[0].color = sf::Color::Blue;
+                                segment[0].color = pathColor;
                                 segment[1].position = sf::Vector2f(node.x, node.y);
-                                segment[1].color = sf::Color::Blue;
+                                segment[1].color = pathColor;
                                 renderTexture.draw(segment);
+                                current = node;
                             }
                             sf::VertexArray segment(sf::Lines, 2);
                             segment[0].position = sf::Vector2f(current.x, current.y);
-                            segment[0].color = sf::Color::Blue;
+                            segment[0].color = pathColor;
                             segment[1].position = sf::Vector2f(to2.x, to2.y);
-                            segment[1].color = sf::Color::Blue;
+                            segment[1].color = pathColor;
                             renderTexture.draw(segment);
                         }
                     }
                     else {
                         sf::VertexArray segment(sf::Lines, 2);
                         segment[0].position = sf::Vector2f(from.x, from.y);
-                        segment[0].color = sf::Color::Blue;
+                        segment[0].color = pathColor;
                         segment[1].position = sf::Vector2f(to2.x, to2.y);
-                        segment[1].color = sf::Color::Blue;
+                        segment[1].color = pathColor;
                         renderTexture.draw(segment);
                     }
+                    break;
                 }
             }
         }
     }
+    
+    // Dibujar nodos especiales si tenemos información del algoritmo
+    if (!currentPathResult.isEmpty()) {
+        sf::CircleShape specialNode(pointSize * 2.0f);
+        specialNode.setOrigin(pointSize * 2.0f, pointSize * 2.0f);
+        
+        // Nodo de inicio (verde)
+        specialNode.setFillColor(sf::Color::Green);
+        specialNode.setPosition(static_cast<float>(currentPathResult.optimalPath.front().x),
+                               static_cast<float>(currentPathResult.optimalPath.front().y));
+        renderTexture.draw(specialNode);
+        
+        // Nodo de destino (rojo)
+        specialNode.setFillColor(sf::Color::Red);
+        specialNode.setPosition(static_cast<float>(currentPathResult.optimalPath.back().x),
+                               static_cast<float>(currentPathResult.optimalPath.back().y));
+        renderTexture.draw(specialNode);
+        
+        std::cout << "Camino dibujado exitosamente con geometría real" << std::endl;
+    }
+    
     renderTexture.display();
     mapSprite.setTexture(renderTexture.getTexture());
 }
@@ -630,19 +739,17 @@ void StaticDisplayMap::txtPointsToGraph(int mapWidth, int mapHeight, std::string
     std::cout << "actualizar grafo" << std::endl;
     updateTextureAll();
 
-    // 100 300 200 300
-    // 200 300 150 400
-    // 150 400 600 200
-    // 600 200 300 100
-
+    // Código de prueba comentado - ahora usar algoritmos reales:
+    // map.executePathfindingDijkstra() o map.executePathfindingAStar()
+    /*
     route = {
         {{100, 300}, {200, 300}},
         {{200, 300}, {150, 400}},
         {{150, 400}, {600, 200}},
         {{600, 200}, {300, 100}}
     };
-
     updateTextureRoute();
+    */
 
     file.close();
 }

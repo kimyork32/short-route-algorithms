@@ -3,28 +3,7 @@
 #include <queue>
 #include <unordered_set>
 
-/**
- * ALGORITMO A* (A-STAR)
- * 
- * CONCEPTO: Optimización de Dijkstra que usa una heurística para dirigir la búsqueda.
- * GARANTÍA: Encuentra el camino óptimo SI la heurística es admisible (nunca sobreestima).
- * COMPLEJIDAD: O(b^d) donde b=factor de ramificación, d=profundidad de la solución
- * 
- * FUNCIONAMIENTO:
- * 1. f(n) = g(n) + h(n)
- *    - g(n) = costo real desde origen hasta n
- *    - h(n) = estimación del costo desde n hasta destino (heurística)
- *    - f(n) = estimación del costo total pasando por n
- * 2. Siempre explorar el nodo con menor f(n)
- * 3. La heurística "guía" la búsqueda hacia el destino
- * 
- * HEURÍSTICA USADA: Distancia euclidiana (admisible para movimiento en cualquier dirección)
- * 
- * VENTAJA VS DIJKSTRA:
- * - Explora menos nodos (más eficiente)
- * - Búsqueda dirigida hacia el objetivo
- * - Mejor para búsquedas punto-a-punto
- */
+
 class ShortestPathAStar : public GraphAlgorithmBase {
 public:
     PathfindingResult findShortestPath(const GraphStructure& graph, 
@@ -176,17 +155,7 @@ public:
     }
 
 private:
-    /**
-     * FUNCIÓN HEURÍSTICA
-     * 
-     * Estima el costo desde un nodo hasta el destino.
-     * REQUISITO: Debe ser ADMISIBLE (nunca sobreestimar el costo real).
-     * 
-     * Usamos distancia euclidiana porque:
-     * 1. Es admisible: La línea recta es siempre el camino más corto
-     * 2. Es consistente: h(n) ≤ c(n,n') + h(n') para cualquier n'
-     * 3. Es fácil de calcular: O(1)
-     */
+  
     double calculateHeuristic(const Point& from, const Point& target) const {
         return calculateEuclideanDistance(from, target);
     }
