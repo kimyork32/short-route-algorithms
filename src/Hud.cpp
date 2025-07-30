@@ -209,6 +209,7 @@ void Hud::updateShow(int sizeNodes) {
         case Mode::INSERT_ARIST: text.setString("Insertar Aristas"); break;
         case Mode::REMOVE_ARISTS: text.setString("Remover Aristas"); break;
         case Mode::REMOVE_NODE: text.setString("Remover Nodo"); break;
+        case Mode::SELECT_START_END_NODE: text.setString("Select nodes route"); break;
     }
     text.setPosition(space * 3 + sepLeft, sepTop);
     renderTextureShow.draw(text);

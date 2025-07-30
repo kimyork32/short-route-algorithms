@@ -16,6 +16,7 @@ ox.settings.use_cache = True
 
 # Obtener el grafo de la ciudad (ejemplo: Arequipa, Perú)
 place_name = f"{district}, {city}, {country}"
+# place_name = "Arequipa, Peru"
 G = ox.graph_from_place(place_name, network_type='drive')
 
 # Dibujar el grafo con nodos (puntos) y aristas (segmentos)
@@ -44,10 +45,10 @@ yp = h / b
 
 with open(f"../resources/city.txt", 'w') as file:
 
-    file.write(f"{north}" + "\n") # norte
-    file.write(f"{south}" + "\n") # sur
-    file.write(f"{east}" + "\n") # este
-    file.write(f"{west}" + "\n") # oeste
+    file.write(f"{north}" + "\n") # norte top
+    file.write(f"{south}" + "\n") # sur botton
+    file.write(f"{east}" + "\n") # este right
+    file.write(f"{west}" + "\n") # oeste left
 
     for i, (u, v, key, data) in enumerate(G.edges(keys=True, data=True)):
         if 'geometry' in data:
