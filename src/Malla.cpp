@@ -284,15 +284,56 @@ float StaticDisplayMap::getDistance(Point& from, Point& to) {
     return getDistanceNodes(from, to);
 }
 
-void StaticDisplayMap::dijkstra() {
+// ========================
+// IMPLEMENTACIÓN DE ALGORITMOS DE PATHFINDING
+// ========================
+
+bool StaticDisplayMap::executePathfindingDijkstra() {
     if (!source.isValid() || !target.isValid()) {
         std::cout << "nodos start y end no iniciados" << std::endl;
     }
 }
 
-void StaticDisplayMap::aStar() {
-    // TODO
-    // route = {};
+bool StaticDisplayMap::executePathfindingAStar() {
+    if (!source.isValid() || !target.isValid()) {
+        std::cout << "Error: Nodos de inicio y/o destino no están definidos" << std::endl;
+        return false;
+    }
+    
+    std::cout << "\n=== EJECUTANDO A* ===" << std::endl;
+    
+    // Limpiar resultado anterior
+    currentPathResult.clear();
+    
+    // Ejecutar algoritmo
+    currentPathResult = astarAlgorithm.findShortestPath(graph, source, target);
+    
+    // Mostrar estadísticas
+    currentPathResult.printStatistics();
+    
+    // Actualizar visualización si se encontró camino
+    if (currentPathResult.pathFound) {
+        updateTextureRoute();
+        std::cout << "A*: Camino dibujado en el mapa" << std::endl;
+        return true;
+    } else {
+        std::cout << "A*: No se pudo encontrar un camino" << std::endl;
+        return false;
+    }
+}
+
+void StaticDisplayMap::clearCurrentPath() {
+    currentPathResult.clear();
+    route.clear();
+    updateTextureAll(); // Redibujar mapa sin el camino
+}
+
+void StaticDisplayMap::printPathStatistics() const {
+    if (!currentPathResult.isEmpty()) {
+        currentPathResult.printStatistics();
+    } else {
+        std::cout << "No hay resultado de pathfinding disponible" << std::endl;
+    }
 }
 
 void StaticDisplayMap::genRandGraph() {
@@ -485,7 +526,6 @@ void StaticDisplayMap::updateTextureRoute(){
                                             segment[1].color = sf::Color::Blue;
                                             renderTexture.draw(segment);
                                         }
-
                                         sf::VertexArray segment(sf::Lines, 2);
                                         segment[0].position = sf::Vector2f(current.x, current.y);
                                         segment[0].color = sf::Color::Blue;
@@ -726,7 +766,6 @@ void StaticDisplayMap::txtPointsToGraph(int mapWidth, int mapHeight, std::string
         {{150, 400}, {600, 200}},
         {{600, 200}, {300, 100}}
     };
-
     updateTextureRoute();
 
     file.close();

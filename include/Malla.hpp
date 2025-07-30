@@ -6,17 +6,9 @@
 #include <vector>
 #include <functional>
 #include "Point.hpp"
-
-namespace std {
-    template <>
-    struct hash<Point> {
-        std::size_t operator()(const Point& p) const noexcept {
-            std::size_t hx = std::hash<int>{}(p.x);
-            std::size_t hy = std::hash<int>{}(p.y);
-            return hx ^ (hy << 1);
-        }
-    };
-}
+#include "GraphAlgorithmBase.hpp"
+#include "pathfinding/ShortestPathDijkstra.hpp"
+#include "pathfinding/ShortestPathAStar.hpp"
 
 class StaticDisplayMap {
 public:
@@ -36,8 +28,12 @@ public:
 
     float getDistance(Point& from, Point& to);
     float getDistanceNodes(const Point& from, const Point& to);
-    void dijkstra();
-    void aStar();
+    
+    // ALGORITMOS DE PATHFINDING
+    bool executePathfindingDijkstra();
+    bool executePathfindingAStar();
+    void clearCurrentPath();
+    void printPathStatistics() const;
 
     void genRandGraph();
     void genLima(int mapWidth, int mapHeight);
@@ -83,6 +79,11 @@ private:
     // para ruta
     Point source;
     Point target;
+    
+    // Instancias de algoritmos
+    ShortestPathDijkstra dijkstraAlgorithm;
+    ShortestPathAStar astarAlgorithm;
+    PathfindingResult currentPathResult;
 };
 
 #endif
