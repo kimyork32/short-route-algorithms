@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <chrono>
 #include <iostream>
+#include <functional>
 
 // ========================
 // ALIAS PARA SIMPLIFICAR
@@ -78,6 +79,16 @@ public:
     virtual PathfindingResult findShortestPath(const GraphStructure& graph, 
                                               const Point& startNode, 
                                               const Point& targetNode) = 0;
+    
+    // Método con verificación de barreras (por defecto llama al método sin barreras)
+    virtual PathfindingResult findShortestPathWithBarriers(const GraphStructure& graph, 
+                                                         const Point& startNode, 
+                                                         const Point& targetNode,
+                                                         std::function<bool(const Point&)> isNodeBlocked,
+                                                         std::function<bool(const Point&, const Point&)> isEdgeBlocked) {
+        // Implementación por defecto que ignora las barreras
+        return findShortestPath(graph, startNode, targetNode);
+    }
     
     // Información del algoritmo
     virtual std::string getAlgorithmName() const = 0;

@@ -223,6 +223,97 @@ void  StaticDisplayMap::insertStartEndNode(Point source, Point target) {
     updateTexturePoint(&cT, sf::Color::Green);
 }
 
+// ========== SISTEMA DE BARRERAS ==========
+
+void StaticDisplayMap::placeBarrierNode(Point node) {
+    const Point* n = getPointIfExists(node);
+    if (n) {
+        Point p = *n;
+        // No permitir bloquear nodos start/end
+        if (p == source || p == target) {
+            std::cout << "No se puede bloquear el nodo de inicio o destino" << std::endl;
+            return;
+        }
+        
+        blockedNodes.insert(p);
+        updateTexturePoint(&p, sf::Color::Red);
+        std::cout << "Nodo bloqueado en (" << p.x << ", " << p.y << ")" << std::endl;
+    }
+}
+
+void StaticDisplayMap::removeBarrierNode(Point node) {
+    const Point* n = getPointIfExists(node);
+    if (n) {
+        Point p = *n;
+        auto it = blockedNodes.find(p);
+        if (it != blockedNodes.end()) {
+            blockedNodes.erase(it);
+            updateTexturePoint(&p, sf::Color::White);
+            std::cout << "Barrera de nodo removida en (" << p.x << ", " << p.y << ")" << std::endl;
+        }
+    }
+}
+
+void StaticDisplayMap::placeBarrierEdge(Point from, Point to) {
+    const Point* f = getPointIfExists(from);
+    const Point* t = getPointIfExists(to);
+    if (f && t) {
+        Point cf = *f;
+        Point ct = *t;
+        
+        // Verificar que la arista existe
+        if (existsEdge(from, to)) {
+            std::pair<Point, Point> edge = {cf, ct};
+            std::pair<Point, Point> reverseEdge = {ct, cf};
+            
+            blockedEdges.insert(edge);
+            blockedEdges.insert(reverseEdge); // Bloquear en ambas direcciones
+            
+            updateTextureUnit(&cf, &ct, sf::Color::Red);
+            std::cout << "Arista bloqueada entre (" << cf.x << ", " << cf.y << ") y (" << ct.x << ", " << ct.y << ")" << std::endl;
+        }
+    }
+}
+
+void StaticDisplayMap::removeBarrierEdge(Point from, Point to) {
+    const Point* f = getPointIfExists(from);
+    const Point* t = getPointIfExists(to);
+    if (f && t) {
+        Point cf = *f;
+        Point ct = *t;
+        
+        std::pair<Point, Point> edge = {cf, ct};
+        std::pair<Point, Point> reverseEdge = {ct, cf};
+        
+        auto it1 = blockedEdges.find(edge);
+        auto it2 = blockedEdges.find(reverseEdge);
+        
+        if (it1 != blockedEdges.end() || it2 != blockedEdges.end()) {
+            blockedEdges.erase(edge);
+            blockedEdges.erase(reverseEdge);
+            
+            updateTextureUnit(&cf, &ct, sf::Color::White);
+            std::cout << "Barrera de arista removida entre (" << cf.x << ", " << cf.y << ") y (" << ct.x << ", " << ct.y << ")" << std::endl;
+        }
+    }
+}
+
+bool StaticDisplayMap::isNodeBlocked(const Point& node) const {
+    return blockedNodes.find(node) != blockedNodes.end();
+}
+
+bool StaticDisplayMap::isEdgeBlocked(const Point& from, const Point& to) const {
+    std::pair<Point, Point> edge = {from, to};
+    return blockedEdges.find(edge) != blockedEdges.end();
+}
+
+void StaticDisplayMap::clearAllBarriers() {
+    blockedNodes.clear();
+    blockedEdges.clear();
+    updateTextureAll();
+    std::cout << "Todas las barreras han sido removidas" << std::endl;
+}
+
 float StaticDisplayMap::getDistanceNodes(const Point& from, const Point& to) {
     return std::sqrtl(std::pow(from.x - to.x, 2) + std::pow(from.y - to.y, 2));
 }
@@ -263,13 +354,25 @@ bool StaticDisplayMap::executePathfindingDijkstra() {
         return false;
     }
     
+    // Verificar que los nodos start/end no estén bloqueados
+    if (isNodeBlocked(source)) {
+        std::cout << "Error: El nodo de inicio está bloqueado" << std::endl;
+        return false;
+    }
+    if (isNodeBlocked(target)) {
+        std::cout << "Error: El nodo de destino está bloqueado" << std::endl;
+        return false;
+    }
+    
     std::cout << "\n=== EJECUTANDO DIJKSTRA ===" << std::endl;
     
     // Limpiar resultado anterior
     currentPathResult.clear();
     
-    // Ejecutar algoritmo
-    currentPathResult = dijkstraAlgorithm.findShortestPath(graph, source, target);
+    // Ejecutar algoritmo con verificación de barreras
+    currentPathResult = dijkstraAlgorithm.findShortestPathWithBarriers(graph, source, target,
+        [this](const Point& node) { return this->isNodeBlocked(node); },
+        [this](const Point& from, const Point& to) { return this->isEdgeBlocked(from, to); });
     
     // Mostrar estadísticas
     currentPathResult.printStatistics();
@@ -291,13 +394,25 @@ bool StaticDisplayMap::executePathfindingAStar() {
         return false;
     }
     
+    // Verificar que los nodos start/end no estén bloqueados
+    if (isNodeBlocked(source)) {
+        std::cout << "Error: El nodo de inicio está bloqueado" << std::endl;
+        return false;
+    }
+    if (isNodeBlocked(target)) {
+        std::cout << "Error: El nodo de destino está bloqueado" << std::endl;
+        return false;
+    }
+    
     std::cout << "\n=== EJECUTANDO A* ===" << std::endl;
     
     // Limpiar resultado anterior
     currentPathResult.clear();
     
-    // Ejecutar algoritmo
-    currentPathResult = astarAlgorithm.findShortestPath(graph, source, target);
+    // Ejecutar algoritmo con verificación de barreras
+    currentPathResult = astarAlgorithm.findShortestPathWithBarriers(graph, source, target,
+        [this](const Point& node) { return this->isNodeBlocked(node); },
+        [this](const Point& from, const Point& to) { return this->isEdgeBlocked(from, to); });
     
     // Mostrar estadísticas
     currentPathResult.printStatistics();

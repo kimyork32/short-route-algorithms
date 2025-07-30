@@ -8,6 +8,8 @@ enum class Mode {
     REMOVE_ARISTS,
     REMOVE_NODE,
     SELECT_START_END_NODE,
+    PLACE_BARRIERS,
+    REMOVE_BARRIERS,
     COUNT
 };
 
@@ -31,6 +33,15 @@ enum class Select {
     CHANGE_ALG,
     CREATE_MAP,
     CHANGE_MAP,
+    // Botones de modo
+    MODE_INSERT_NODES,
+    MODE_INSERT_EDGES,
+    MODE_REMOVE_NODES,
+    MODE_REMOVE_EDGES,
+    MODE_SELECT_START_END,
+    MODE_PLACE_BARRIERS,
+    MODE_REMOVE_BARRIERS,
+    MODE_NOTHING,
     COUNT
 };
 

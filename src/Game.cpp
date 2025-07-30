@@ -62,6 +62,30 @@ void Game::processEvents() {
                     case Select::CHANGE_MAP: 
                         hud.nextMap();
                         break;
+                    case Select::MODE_INSERT_NODES:
+                        hud.setMode(Mode::INSERT_NODES);
+                        break;
+                    case Select::MODE_INSERT_EDGES:
+                        hud.setMode(Mode::INSERT_ARIST);
+                        break;
+                    case Select::MODE_REMOVE_NODES:
+                        hud.setMode(Mode::REMOVE_NODE);
+                        break;
+                    case Select::MODE_REMOVE_EDGES:
+                        hud.setMode(Mode::REMOVE_ARISTS);
+                        break;
+                    case Select::MODE_SELECT_START_END:
+                        hud.setMode(Mode::SELECT_START_END_NODE);
+                        break;
+                    case Select::MODE_PLACE_BARRIERS:
+                        hud.setMode(Mode::PLACE_BARRIERS);
+                        break;
+                    case Select::MODE_REMOVE_BARRIERS:
+                        hud.setMode(Mode::REMOVE_BARRIERS);
+                        break;
+                    case Select::MODE_NOTHING:
+                        hud.setMode(Mode::NOTHING);
+                        break;
                 }
             }
             // if (x >= 0 && x < mapWidth && y >= 0 && y < mapHeight) {
@@ -126,6 +150,44 @@ void Game::processEvents() {
                             }
                         }
                         break;
+                    
+                    case Mode::PLACE_BARRIERS:
+                        std::cout << "mode place barriers" << std::endl;
+                        if (event.mouseButton.button == sf::Mouse::Left) {
+                            if (waitSecordClick) {
+                                // Colocar barrera en arista
+                                grid.placeBarrierEdge(firstClick, mousePos);
+                                waitSecordClick = false;
+                            }
+                            else {
+                                firstClick = mousePos;
+                                waitSecordClick = true;
+                            }
+                        }
+                        else if (event.mouseButton.button == sf::Mouse::Right) {
+                            // Colocar barrera en nodo (click derecho)
+                            grid.placeBarrierNode(mousePos);
+                        }
+                        break;
+                    
+                    case Mode::REMOVE_BARRIERS:
+                        std::cout << "mode remove barriers" << std::endl;
+                        if (event.mouseButton.button == sf::Mouse::Left) {
+                            if (waitSecordClick) {
+                                // Remover barrera de arista
+                                grid.removeBarrierEdge(firstClick, mousePos);
+                                waitSecordClick = false;
+                            }
+                            else {
+                                firstClick = mousePos;
+                                waitSecordClick = true;
+                            }
+                        }
+                        else if (event.mouseButton.button == sf::Mouse::Right) {
+                            // Remover barrera de nodo (click derecho)
+                            grid.removeBarrierNode(mousePos);
+                        }
+                        break;
                 }
             }
 
@@ -170,6 +232,25 @@ void Game::processEvents() {
                         hud.setMode(Mode::SELECT_START_END_NODE);
                     else
                         hud.setMode(Mode::NOTHING);
+                    break;
+
+                case sf::Keyboard::B:
+                    if (hud.getMode() != Mode::PLACE_BARRIERS)
+                        hud.setMode(Mode::PLACE_BARRIERS);
+                    else
+                        hud.setMode(Mode::NOTHING);
+                    break;
+
+                case sf::Keyboard::V:
+                    if (hud.getMode() != Mode::REMOVE_BARRIERS)
+                        hud.setMode(Mode::REMOVE_BARRIERS);
+                    else
+                        hud.setMode(Mode::NOTHING);
+                    break;
+
+                case sf::Keyboard::R:
+                    // Limpiar todas las barreras
+                    grid.clearAllBarriers();
                     break;
 
                 default:

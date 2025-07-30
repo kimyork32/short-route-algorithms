@@ -39,6 +39,16 @@ namespace std {
             return hx ^ (hy << 1);
         }
     };
+    
+    // Especialización de hash para par de puntos (para edges bloqueadas)
+    template <>
+    struct hash<std::pair<Point, Point>> {
+        std::size_t operator()(const std::pair<Point, Point>& edge) const noexcept {
+            std::size_t h1 = std::hash<Point>{}(edge.first);
+            std::size_t h2 = std::hash<Point>{}(edge.second);
+            return h1 ^ (h2 << 1);
+        }
+    };
 }
 
 #endif

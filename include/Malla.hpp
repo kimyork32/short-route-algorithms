@@ -3,6 +3,7 @@
 
 #include <SFML/Graphics.hpp>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 #include <functional>
 #include "Point.hpp"
@@ -25,6 +26,15 @@ public:
 
     void removeNodeWindow(Point node);
     void removeEdgeWindow(Point from, Point to);
+
+    // SISTEMA DE BARRERAS
+    void placeBarrierNode(Point node);
+    void removeBarrierNode(Point node);
+    void placeBarrierEdge(Point from, Point to);
+    void removeBarrierEdge(Point from, Point to);
+    bool isNodeBlocked(const Point& node) const;
+    bool isEdgeBlocked(const Point& from, const Point& to) const;
+    void clearAllBarriers();
 
     float getDistance(Point& from, Point& to);
     float getDistanceNodes(const Point& from, const Point& to);
@@ -74,6 +84,10 @@ private:
     // para ruta
     Point source;
     Point target;
+    
+    // SISTEMA DE BARRERAS
+    std::unordered_set<Point> blockedNodes;
+    std::unordered_set<std::pair<Point, Point>, std::hash<std::pair<Point, Point>>> blockedEdges;
     
     // Instancias de algoritmos
     ShortestPathDijkstra dijkstraAlgorithm;
