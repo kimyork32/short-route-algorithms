@@ -12,6 +12,9 @@
 #include <vector>
 #include <functional>
 #include <exception>
+#include <chrono>
+#include <iomanip>
+#include <cmath>
 
 /**
  * @file TestRunner.hpp

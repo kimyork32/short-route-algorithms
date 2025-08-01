@@ -7,7 +7,7 @@
 #include <stack>
 #include <iterator>
 
-DS_NAMESPACE_BEGIN
+namespace ds {
 
 template<typename Key, typename Value, typename Compare = std::less<Key>>
 class AVLTree {
@@ -618,4 +618,4 @@ using PathfindingAVLMap = AVLTree<Point, T>;
 using PathfindingAVLDistanceMap = PathfindingAVLMap<double>;
 using PathfindingAVLParentMap = PathfindingAVLMap<Point>;
 
-DS_NAMESPACE_END
+} // namespace ds

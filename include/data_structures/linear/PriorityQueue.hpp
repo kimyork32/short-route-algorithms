@@ -5,6 +5,7 @@
 #include "Vector.hpp"
 #include <functional>
 #include <algorithm>
+#include <iostream>
 
 /**
  * @file PriorityQueue.hpp
@@ -39,7 +40,7 @@ namespace ds {
      */
     template<
         typename T,
-        typename Compare = std::greater<T>  // Min-heap by default
+        typename Compare = std::less<T>  // Min-heap by default
     >
     class PriorityQueue {
     public:
@@ -161,7 +162,9 @@ namespace ds {
          * @complexity O(1)
          */
         explicit PriorityQueue(size_t initial_capacity, const Compare& comp = Compare())
-            : heap_(initial_capacity), comp_(comp) {}
+            : heap_(), comp_(comp) {
+            heap_.reserve(initial_capacity);
+        }
         
         /**
          * @brief Copy constructor

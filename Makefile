@@ -1,6 +1,7 @@
-# Compilador y flags para Windows
+# Compilador y flags para Windows  
 CXX = g++
-CXXFLAGS = -Iinclude -Iinclude/data_structures -std=c++17 -Wall -Wextra -g -O2 -DUSE_CUSTOM_CONTAINERS
+BASE_CXXFLAGS = -Iinclude -Iinclude/data_structures -std=c++17 -Wall -Wextra -g -O2
+CXXFLAGS = $(BASE_CXXFLAGS) -DUSE_CUSTOM_CONTAINERS
 LDFLAGS = -lsfml-graphics -lsfml-window -lsfml-system -lgmp -lgmpxx
 
 # Detectar si estamos en Windows
@@ -42,10 +43,11 @@ game: $(TARGET)
 benchmark: $(BENCHMARK_TARGET)
 test: $(TEST_TARGET)
 custom: CXXFLAGS += -DUSE_CUSTOM_CONTAINERS
+custom: CXXFLAGS = $(BASE_CXXFLAGS) -DUSE_CUSTOM_CONTAINERS
 custom: $(TARGET)
-stl: CXXFLAGS += -DUSE_STD_CONTAINERS
+stl: CXXFLAGS = $(BASE_CXXFLAGS) -DUSE_STD_CONTAINERS
 stl: $(TARGET)
-hybrid: CXXFLAGS += -DUSE_HYBRID_CONTAINERS
+hybrid: CXXFLAGS = $(BASE_CXXFLAGS) -DUSE_HYBRID_CONTAINERS
 hybrid: $(TARGET)
 
 # Vincula todos los objetos al ejecutable principal

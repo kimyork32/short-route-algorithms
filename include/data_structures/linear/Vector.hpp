@@ -345,8 +345,9 @@ namespace ds {
          */
         explicit Vector(size_type count, const T& value = T()) 
             : data_(allocate(count)), size_(count), capacity_(count) {
+            size_type i = 0;
             try {
-                for (size_type i = 0; i < count; ++i) {
+                for (i = 0; i < count; ++i) {
                     construct(data_ + i, value);
                 }
             } catch (...) {
@@ -362,8 +363,9 @@ namespace ds {
          */
         Vector(const Vector& other) 
             : data_(allocate(other.capacity_)), size_(other.size_), capacity_(other.capacity_) {
+            size_type i = 0;
             try {
-                for (size_type i = 0; i < size_; ++i) {
+                for (i = 0; i < size_; ++i) {
                     construct(data_ + i, other.data_[i]);
                 }
             } catch (...) {

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "HashMap.hpp"
+#include <iostream>
 
 /**
  * @file HashSet.hpp

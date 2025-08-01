@@ -99,20 +99,20 @@ void StaticDisplayMap::insertPoint(Point node) {
     graph[node];
 }
 
-void StaticDisplayMap::insertEdge(Point from, Point to, const std::vector<Point>& geometry) {
+void StaticDisplayMap::insertEdge(Point from, Point to, const ds::Vector<Point>& geometry) {
     if (!geometry.empty()) {
         graph[from].push_back({to, {true, geometry}});
-        graph[to].push_back({from, {true, {}}});
+        graph[to].push_back({from, {true, ds::Vector<Point>{}}});  // ✅ Usa ds::Vector vacío
     }
     else {
-        graph[from].push_back({to, {false, {}}});
-        graph[to].push_back({from, {false, {}}});
+        graph[from].push_back({to, {false, ds::Vector<Point>{}}});  // ✅ Usa ds::Vector vacío
+        graph[to].push_back({from, {false, ds::Vector<Point>{}}});  // ✅ Usa ds::Vector vacío
     }
     // updateTexture();
 }
 
 void StaticDisplayMap::insertEdge(Point from, Point to) {
-    insertEdge(from, to, {});
+    insertEdge(from, to, ds::Vector<Point>{});  // ✅ Usa ds::Vector vacío
     // updateTexture();
 }
 
@@ -169,7 +169,7 @@ void StaticDisplayMap::removeNodeWindow(Point node) {
         for (auto& [from, edge] : graph) {
             edge.erase(
                 std::remove_if(edge.begin(), edge.end(),
-                    [&](const std::pair<Point, std::pair<bool, std::vector<Point>>>& e) {
+                    [&](const std::pair<Point, std::pair<bool, ds::Vector<Point>>>& e) {
                         return e.first == p;
                     }
                 ),
@@ -187,7 +187,7 @@ void StaticDisplayMap::removeEdgeWindow(Point from, Point to) {
     for (auto& [from2, edge] : graph) {
         edge.erase(
             std::remove_if(edge.begin(), edge.end(),
-                [&](const std::pair<Point, std::pair<bool, std::vector<Point>>>& e) {
+                [&](const std::pair<Point, std::pair<bool, ds::Vector<Point>>>& e) {
                     const Point& to2 = e.first;
                     bool c = ifIntersect(from, to, from2, to2);
                     if (c) {
@@ -485,8 +485,8 @@ void StaticDisplayMap::genRandGraph() {
         // graph[p1].emplace_back(p2, std::vector<Point>{false, {}});
         // graph[p2].emplace_back(p1, std::vector<Point>{false, {}});
 
-        graph[p1].emplace_back(p2, std::pair<bool, std::vector<Point>>{false, {}});
-        graph[p2].emplace_back(p1, std::pair<bool, std::vector<Point>>{false, {}});
+        graph[p1].emplace_back(p2, std::pair<bool, ds::Vector<Point>>{false, {}});
+        graph[p2].emplace_back(p1, std::pair<bool, ds::Vector<Point>>{false, {}});
     }
     updateTextureAll();
 }
@@ -681,7 +681,7 @@ void StaticDisplayMap::updateTextureAll() {
         for (const auto& [to, edgeData] : edge) {
             const auto& [isGeo, geometry] = edgeData;
             // Si hay puntos intermedios (geometry), dibujarlos como líneas consecutivas
-            std::vector<Point> tempGeometry = geometry;
+            ds::Vector<Point> tempGeometry = geometry;
             if (isGeo && geometry.empty()) {
                 continue;
             }
@@ -832,7 +832,7 @@ void StaticDisplayMap::txtPointsToGraph(int mapWidth, int mapHeight, std::string
         std::cout << "\n";
         Point source(tempInts[0], tempInts[1]);
         Point target(tempInts[tempInts.size() - 2], tempInts[tempInts.size() - 1]);
-        std::vector<Point> geometry;
+        ds::Vector<Point> geometry;
         std::cout << "tamaño tempInts: " << tempInts.size() << std::endl;
         if (tempInts.size() > 4) {
             // obteniendo los puntos de geometry

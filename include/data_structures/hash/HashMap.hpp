@@ -161,7 +161,7 @@ namespace ds {
                 
                 // Found existing key
                 if (!current.is_tombstone && current.data.first == new_entry.data.first) {
-                    current.data.second = std::forward<V>(value);
+                    current.data.second = new_entry.data.second;
                     return {bucket, false};
                 }
                 
@@ -429,8 +429,14 @@ namespace ds {
          * @complexity O(1) average
          */
         mapped_type& operator[](const Key& key) {
-            auto [bucket, inserted] = insert_internal(key, mapped_type{});
-            return buckets_[bucket].data.second;
+            size_t bucket = find_bucket(key);
+            if (bucket != capacity_) {
+                // Key exists, return reference to existing value
+                return buckets_[bucket].data.second;
+            }
+            // Key doesn't exist, insert with default value
+            auto [new_bucket, inserted] = insert_internal(key, mapped_type{});
+            return buckets_[new_bucket].data.second;
         }
         
         // ========================

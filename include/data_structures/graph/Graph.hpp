@@ -1,6 +1,19 @@
 #pragma once
 
-#include "../core/Common.hpp"
+#include "../core/Common.hpp"// Pathfinding result structure for internal graph algorithms
+/*
+template<typename Vertex, typename Weight = double>
+struct PathfindingResult {
+    bool path_found;
+    Weight total_distance;
+    ds::Vector<Vertex> path;
+    size_t nodes_explored;
+    double computation_time_ms;
+    
+    PathfindingResult() : path_found(false), total_distance(Weight{}), nodes_explored(0), computation_time_ms(0.0) {}
+};
+*/
+
 #include "../core/Hash.hpp"
 #include "../hash/HashMap.hpp"
 #include "../hash/HashSet.hpp"
@@ -9,8 +22,9 @@
 #include <algorithm>
 #include <functional>
 #include <limits>
+#include <chrono>
 
-DS_NAMESPACE_BEGIN
+namespace ds {
 
 // Forward declarations for pathfinding algorithms
 template<typename Vertex, typename Weight = double>
@@ -45,7 +59,7 @@ template<typename Vertex, typename Weight = double>
 struct PathfindingResult {
     bool path_found;
     Weight total_distance;
-    Vector<Vertex> path;
+    ds::Vector<Vertex> path;
     size_t nodes_explored;
     double computation_time_ms;
     
@@ -59,11 +73,11 @@ public:
     using VertexType = Vertex;
     using WeightType = Weight;
     using EdgeType = Edge<Vertex, Weight>;
-    using AdjacencyList = Vector<std::pair<Vertex, Weight>>;
-    using AdjacencyMap = HashMap<Vertex, AdjacencyList>;
-    using VertexSet = HashSet<Vertex>;
-    using DistanceMap = HashMap<Vertex, Weight>;
-    using ParentMap = HashMap<Vertex, Vertex>;
+    using AdjacencyList = ds::Vector<std::pair<Vertex, Weight>>;
+    using AdjacencyMap = ds::HashMap<Vertex, AdjacencyList>;
+    using VertexSet = ds::HashSet<Vertex>;
+    using DistanceMap = ds::HashMap<Vertex, Weight>;
+    using ParentMap = ds::HashMap<Vertex, Vertex>;
     
 private:
     AdjacencyMap adjacency_list_;
@@ -334,8 +348,8 @@ public:
         DistanceMap distances;
         ParentMap parents;
         VertexSet visited;
-        PriorityQueue<std::pair<Weight, Vertex>, Vector<std::pair<Weight, Vertex>>, 
-                     std::greater<std::pair<Weight, Vertex>>> pq;
+        ds::PriorityQueue<std::pair<Weight, Vertex>, 
+                         std::greater<std::pair<Weight, Vertex>>> pq;
         
         // Initialize distances to infinity
         for (const auto& vertex : vertices_) {
@@ -384,7 +398,7 @@ public:
         
         // Reconstruct path if found
         if (result.path_found) {
-            Vector<Vertex> path;
+            ds::Vector<Vertex> path;
             Vertex current = goal;
             
             while (true) {
@@ -422,8 +436,8 @@ public:
         DistanceMap f_scores; // g_score + heuristic
         ParentMap parents;
         VertexSet closed_set;
-        PriorityQueue<std::pair<Weight, Vertex>, Vector<std::pair<Weight, Vertex>>, 
-                     std::greater<std::pair<Weight, Vertex>>> open_queue;
+        ds::PriorityQueue<std::pair<Weight, Vertex>, 
+                         std::greater<std::pair<Weight, Vertex>>> open_queue;
         
         // Initialize scores
         for (const auto& vertex : vertices_) {
@@ -475,7 +489,7 @@ public:
         
         // Reconstruct path if found
         if (result.path_found) {
-            Vector<Vertex> path;
+            ds::Vector<Vertex> path;
             Vertex current = goal;
             
             while (true) {
@@ -523,7 +537,7 @@ public:
         if (vertices_.empty()) return true;
         
         VertexSet visited;
-        Vector<Vertex> stack;
+        ds::Vector<Vertex> stack;
         
         // Start DFS from first vertex
         auto first_vertex = *vertices_.begin();
@@ -556,7 +570,7 @@ public:
             if (!visited.contains(vertex)) {
                 // Start new component
                 ++components;
-                Vector<Vertex> stack;
+                ds::Vector<Vertex> stack;
                 stack.push_back(vertex);
                 visited.insert(vertex);
                 
@@ -670,4 +684,4 @@ inline PointGraph create_grid_graph(int width, int height, bool allow_diagonals 
     return graph;
 }
 
-DS_NAMESPACE_END
+} // namespace ds

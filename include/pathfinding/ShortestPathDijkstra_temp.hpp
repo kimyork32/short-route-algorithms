@@ -56,10 +56,11 @@ public:
         // ========================
         // INICIALIZACIÓN
         // ========================
-        auto [startDistIter, startDistInserted] = shortestDistances.insert(startNode, 0.0);
-        // CRÍTICO: El nodo de inicio es padre de sí mismo usando insert() explícito
-        auto [startParentIter, startParentInserted] = parentNodes.insert(startNode, startNode);
+        shortestDistances[startNode] = 0.0;
         pendingNodes.push({0.0, startNode});
+        
+        std::cout << "Dijkstra: Iniciando búsqueda desde (" << startNode.x << "," << startNode.y 
+                  << ") hacia (" << targetNode.x << "," << targetNode.y << ")" << std::endl;
         
         // ========================
         // ALGORITMO PRINCIPAL DIJKSTRA
@@ -80,6 +81,7 @@ public:
             
             // ¿Llegamos al destino?
             if (currentNode == targetNode) {
+                std::cout << "Dijkstra: ¡Destino encontrado!" << std::endl;
                 break;
             }
             
@@ -95,30 +97,15 @@ public:
                     
                     // Calcular distancia tentativa al vecino
                     double edgeWeight = calculateRealDistance(currentNode, neighborNode, edgeData);
-                    
-                    // Obtener distancia actual del vecino de forma segura
-                    double currentNeighborDistance = std::numeric_limits<double>::infinity();
-                    auto distanceIterator = shortestDistances.find(neighborNode);
-                    if (distanceIterator != shortestDistances.end()) {
-                        currentNeighborDistance = distanceIterator->second;
-                    }
-                    
-                    // Calcular distancia tentativa
                     double tentativeDistance = currentDistance + edgeWeight;
                     
                     // ¿Es este un camino mejor al vecino?
-                    if (tentativeDistance < currentNeighborDistance) {
-                        // Actualizar distancia y padre usando insert() explícito
-                        auto [parentIter, parentInserted] = parentNodes.insert(neighborNode, currentNode);
-                        auto [distIter, distInserted] = shortestDistances.insert(neighborNode, tentativeDistance);
+                    auto distanceIterator = shortestDistances.find(neighborNode);
+                    if (distanceIterator == shortestDistances.end() || tentativeDistance < distanceIterator->second) {
                         
-                        if (!parentInserted) {
-                            parentIter->second = currentNode;
-                        }
-                        
-                        if (!distInserted) {
-                            distIter->second = tentativeDistance;
-                        }
+                        // Actualizar distancia y padre
+                        parentNodes[neighborNode] = currentNode;
+                        shortestDistances[neighborNode] = tentativeDistance;
                         
                         // Agregar a la cola para explorar
                         pendingNodes.push({tentativeDistance, neighborNode});
@@ -134,24 +121,23 @@ public:
         if (targetDistanceIterator != shortestDistances.end()) {
             result.pathFound = true;
             result.totalDistance = targetDistanceIterator->second;
-            
             result.optimalPath = reconstructOptimalPath(parentNodes, startNode, targetNode);
             
             if (result.optimalPath.empty()) {
                 result.pathFound = false;
+                std::cout << "Dijkstra: Error al reconstruir el camino" << std::endl;
             }
+        } else {
+            std::cout << "Dijkstra: No se encontró camino al destino" << std::endl;
         }
         
         // Guardar información detallada
-        result.calculatedDistances = shortestDistances;  // Copia para métricas
-        result.parentNodes = parentNodes;                // Copia para métricas
+        result.calculatedDistances = std::move(shortestDistances);
+        result.parentNodes = std::move(parentNodes);
         
         // Calcular tiempo de ejecución
         auto endTime = std::chrono::high_resolution_clock::now();
         result.executionTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
-        
-        // ✅ CALCULAR MÉTRICAS DE RENDIMIENTO DE ESTRUCTURAS PERSONALIZADAS
-        calculatePerformanceMetrics(result, shortestDistances, parentNodes);
         
         return result;
     }
@@ -212,10 +198,11 @@ public:
         // ========================
         // INICIALIZACIÓN
         // ========================
-        auto [startDistIter, startDistInserted] = shortestDistances.insert(startNode, 0.0);
-        // CRÍTICO: El nodo de inicio es padre de sí mismo usando insert() explícito
-        auto [startParentIter, startParentInserted] = parentNodes.insert(startNode, startNode);
+        shortestDistances[startNode] = 0.0;
         pendingNodes.push({0.0, startNode});
+        
+        std::cout << "Dijkstra con barreras: Iniciando búsqueda desde (" << startNode.x << "," << startNode.y 
+                  << ") hacia (" << targetNode.x << "," << targetNode.y << ")" << std::endl;
         
         // ========================
         // ALGORITMO PRINCIPAL DIJKSTRA
@@ -262,30 +249,15 @@ public:
                     
                     // Calcular distancia tentativa al vecino
                     double edgeWeight = calculateRealDistance(currentNode, neighborNode, edgeData);
-                    
-                    // Obtener distancia actual del vecino de forma segura
-                    double currentNeighborDistance = std::numeric_limits<double>::infinity();
-                    auto distanceIterator = shortestDistances.find(neighborNode);
-                    if (distanceIterator != shortestDistances.end()) {
-                        currentNeighborDistance = distanceIterator->second;
-                    }
-                    
-                    // Calcular distancia tentativa
                     double tentativeDistance = currentDistance + edgeWeight;
                     
                     // ¿Es este un camino mejor al vecino?
-                    if (tentativeDistance < currentNeighborDistance) {
-                        // Actualizar distancia y padre usando insert() explícito
-                        auto [parentIter, parentInserted] = parentNodes.insert(neighborNode, currentNode);
-                        auto [distIter, distInserted] = shortestDistances.insert(neighborNode, tentativeDistance);
+                    auto distanceIterator = shortestDistances.find(neighborNode);
+                    if (distanceIterator == shortestDistances.end() || tentativeDistance < distanceIterator->second) {
                         
-                        if (!parentInserted) {
-                            parentIter->second = currentNode;
-                        }
-                        
-                        if (!distInserted) {
-                            distIter->second = tentativeDistance;
-                        }
+                        // Actualizar distancia y padre
+                        parentNodes[neighborNode] = currentNode;
+                        shortestDistances[neighborNode] = tentativeDistance;
                         
                         // Agregar a la cola para explorar
                         pendingNodes.push({tentativeDistance, neighborNode});
@@ -301,24 +273,23 @@ public:
         if (targetDistanceIterator != shortestDistances.end()) {
             result.pathFound = true;
             result.totalDistance = targetDistanceIterator->second;
-            
             result.optimalPath = reconstructOptimalPath(parentNodes, startNode, targetNode);
             
             if (result.optimalPath.empty()) {
                 result.pathFound = false;
+                std::cout << "Dijkstra: Error al reconstruir el camino" << std::endl;
             }
+        } else {
+            std::cout << "Dijkstra: No se encontró camino al destino (posibles barreras)" << std::endl;
         }
         
         // Guardar información detallada
-        result.calculatedDistances = shortestDistances;  // Copia para métricas
-        result.parentNodes = parentNodes;                // Copia para métricas
+        result.calculatedDistances = std::move(shortestDistances);
+        result.parentNodes = std::move(parentNodes);
         
         // Calcular tiempo de ejecución
         auto endTime = std::chrono::high_resolution_clock::now();
         result.executionTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
-        
-        // ✅ CALCULAR MÉTRICAS DE RENDIMIENTO DE ESTRUCTURAS PERSONALIZADAS
-        calculatePerformanceMetrics(result, shortestDistances, parentNodes);
         
         return result;
     }

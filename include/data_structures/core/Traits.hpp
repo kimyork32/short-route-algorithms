@@ -55,8 +55,8 @@ namespace ds {
     /**
      * @brief Perfect forwarding utility
      */
-    template<typename T>
-    constexpr T&& forward_like(auto&& x) noexcept {
+    template<typename T, typename U>
+    constexpr T&& forward_like(U&& x) noexcept {
         if constexpr (std::is_lvalue_reference_v<T>) {
             return static_cast<std::remove_reference_t<T>&>(x);
         } else {

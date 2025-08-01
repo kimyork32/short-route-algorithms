@@ -136,15 +136,3 @@ namespace ds {
     constexpr bool is_hashable_v = is_hashable<T>::value;
     
 } // namespace ds
-
-/**
- * @brief Specialization for std namespace (for STL compatibility)
- */
-namespace std {
-    template<>
-    struct hash<Point> {
-        size_t operator()(const Point& point) const noexcept {
-            return ds::Hash<Point>{}(point);
-        }
-    };
-}

@@ -24,6 +24,7 @@
 // Include custom implementations
 #include "hash/HashMap.hpp"
 #include "hash/HashSet.hpp"
+#include "hash/HybridHashMap.hpp"
 #include "linear/Vector.hpp"
 #include "linear/PriorityQueue.hpp"
 #include "linear/Stack.hpp"

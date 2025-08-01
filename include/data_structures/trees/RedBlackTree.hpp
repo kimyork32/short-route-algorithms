@@ -7,7 +7,7 @@
 #include <stack>
 #include <iterator>
 
-DS_NAMESPACE_BEGIN
+namespace ds {
 
 template<typename Key, typename Value, typename Compare = std::less<Key>>
 class RedBlackTree {
@@ -713,4 +713,4 @@ using PathfindingRBMap = RedBlackTree<Point, T>;
 using PathfindingRBDistanceMap = PathfindingRBMap<double>;
 using PathfindingRBParentMap = PathfindingRBMap<Point>;
 
-DS_NAMESPACE_END
+} // namespace ds

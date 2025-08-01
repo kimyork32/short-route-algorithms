@@ -20,7 +20,7 @@ public:
     void insertPointWindow(Point node);
     void insertEdgeWindow(Point from, Point to);
     void insertPoint(Point node);
-    void insertEdge(Point from, Point to, const std::vector<Point>& geometry);
+    void insertEdge(Point from, Point to, const ds::Vector<Point>& geometry);  // ✅ Usa ds::Vector
     void insertEdge(Point from, Point to); // sobrecarga de funcion 
     void insertStartEndNode(Point from, Point to);
 
@@ -75,7 +75,7 @@ public:
 private:
     int width, height, pointSize;
 
-    std::unordered_map<Point, std::vector<std::pair<Point, std::pair<bool, std::vector<Point>>>>> graph;
+    GraphStructure graph;  // ✅ Usa implementaciones optimizadas automáticamente
     std::vector<std::pair<Point, Point>> route;
     sf::RenderTexture renderTexture;
     sf::Sprite mapSprite;

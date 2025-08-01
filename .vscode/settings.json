@@ -1,1 +1,8 @@
-{}
+{
+    "files.associations": {
+        "map": "cpp",
+        "format": "cpp",
+        "chrono": "cpp",
+        "functional": "cpp"
+    }
+}

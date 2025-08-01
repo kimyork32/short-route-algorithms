@@ -51,4 +51,9 @@ namespace std {
     };
 }
 
+// Operator for printing Point (for testing)
+inline std::ostream& operator<<(std::ostream& os, const Point& p) {
+    return os << "Point(" << p.x << ", " << p.y << ")";
+}
+
 #endif
