@@ -9,6 +9,9 @@
 #include "GraphAlgorithmBase.hpp"
 #include "pathfinding/ShortestPathDijkstra.hpp"
 #include "pathfinding/ShortestPathAStar.hpp"
+#include "pathfinding/DepthFirstSearch.hpp"
+#include "pathfinding/BreadthFirstSearch.hpp"
+#include "pathfinding/BestFirstSearch.hpp"
 #include "../include/CGALincludes.hpp"
 
 class StaticDisplayMap {
@@ -93,6 +96,9 @@ private:
     // Instancias de algoritmos
     ShortestPathDijkstra dijkstraAlgorithm;
     ShortestPathAStar astarAlgorithm;
+    DepthFirstSearch depthFSAlgorithm;
+    BreadthFirstSearch breadthFSAlgorithm;
+    BestFirstSearch bestFSAlgorithm;
     PathfindingResult currentPathResult;
 
     float lastBuildTime = 0.f;

@@ -23,6 +23,8 @@ public:
             std::cout << "Error: Nodo de inicio o destino no existe en el grafo" << std::endl;
             return result;
         }
+
+        std::cout << "etapa 1\n";
         
         if (startNode == targetNode) {
             result.pathFound = true;
@@ -30,6 +32,7 @@ public:
             result.totalDistance = 0.0;
             return result;
         }
+        std::cout << "etapa 2\n";
         
         // ========================
         // ESTRUCTURAS DEL ALGORITMO
@@ -44,6 +47,7 @@ public:
         // Nodos ya procesados (con distancia final confirmada)
         std::unordered_set<Point> processedNodes;
         
+        std::cout << "etapa 3\n";
         // Cola de prioridad: pair<distancia, nodo>
         // std::greater hace que sea un min-heap (menor distancia primero)
         using PriorityQueueElement = std::pair<double, Point>;
@@ -54,7 +58,9 @@ public:
         // ========================
         // INICIALIZACIÓN
         // ========================
+        std::cout << " accediendo\n";
         shortestDistances[startNode] = 0.0;
+        std::cout << " ya acecdido\n";
         priorityQueue.push({0.0, startNode});
         
         std::cout << "Dijkstra: Iniciando búsqueda desde (" << startNode.x << "," << startNode.y 

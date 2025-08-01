@@ -13,7 +13,10 @@ StaticDisplayMap::StaticDisplayMap(int width, int height, int size, int sizeNode
     pointSize(size), 
     sizeNodes(sizeNodes),
     dijkstraAlgorithm(&this->graph),
-    astarAlgorithm(&this->graph)
+    astarAlgorithm(&this->graph),
+    depthFSAlgorithm(&this->graph),
+    breadthFSAlgorithm(&this->graph),
+    bestFSAlgorithm(&this->graph)
 {
 
     renderTexture.create(width, height);
@@ -293,15 +296,39 @@ float StaticDisplayMap::getDistance(Point& from, Point& to) {
 
 bool StaticDisplayMap::executePathfindingDijkstra() {
     if (!source.isValid() || !target.isValid()) {
-        std::cout << "nodos start y end no iniciados" << std::endl;
+        std::cout << "Error: Nodos de inicio y/o destino no están definidos" << std::endl;
+        return false;
     }
-
+    
     auto start = std::chrono::high_resolution_clock::now();
-    // Finalizar medición de tiempo
-    auto end = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::duration<double>>(end - start);
-    // std::cout << "Tiempo de ejecución: " << duration.count() << " segundos\n";
-    lastSearchTime = duration.count();
+
+    std::cout << "\n=== EJECUTANDO DIJKSTRA ===" << std::endl;
+    
+    // Limpiar resultado anterior
+    currentPathResult.clear();
+    
+    // Ejecutar algoritmo
+    currentPathResult = dijkstraAlgorithm.findShortestPath(source, target);
+    
+    // Mostrar estadísticas
+    currentPathResult.printStatistics();
+    
+    // Actualizar visualización si se encontró camino
+    if (currentPathResult.pathFound) {
+        updateTextureRoute();
+
+        // Finalizar medición de tiempo
+        auto end = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::duration<double>>(end - start);
+        // std::cout << "Tiempo de ejecución: " << duration.count() << " segundos\n";
+        lastSearchTime = duration.count();
+        std::cout << "tiempo de busqueda : " << lastSearchTime << "\n";
+
+        return true;
+    } else {
+        std::cout << "dijkstra: No se pudo encontrar un camino" << std::endl;
+        return false;
+    }
 }
 
 bool StaticDisplayMap::executePathfindingAStar() {
@@ -349,41 +376,113 @@ bool StaticDisplayMap::executePathfindingAStar() {
 
 bool StaticDisplayMap::executePathfindingDetphFS() {
     if (!source.isValid() || !target.isValid()) {
-        std::cout << "nodos start y end no iniciados" << std::endl;
+        std::cout << "Error: Nodos de inicio y/o destino no están definidos" << std::endl;
+        return false;
     }
-
+    
     auto start = std::chrono::high_resolution_clock::now();
-    // Finalizar medición de tiempo
-    auto end = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::duration<double>>(end - start);
-    // std::cout << "Tiempo de ejecución: " << duration.count() << " segundos\n";
-    lastSearchTime = duration.count();
+
+    std::cout << "\n=== EJECUTANDO DETPH FS ===" << std::endl;
+    
+    // Limpiar resultado anterior
+    currentPathResult.clear();
+    
+    // Ejecutar algoritmo
+    currentPathResult = depthFSAlgorithm.findShortestPath(source, target);
+    
+    // Mostrar estadísticas
+    currentPathResult.printStatistics();
+    
+    // Actualizar visualización si se encontró camino
+    if (currentPathResult.pathFound) {
+        updateTextureRoute();
+
+        // Finalizar medición de tiempo
+        auto end = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::duration<double>>(end - start);
+        // std::cout << "Tiempo de ejecución: " << duration.count() << " segundos\n";
+        lastSearchTime = duration.count();
+        std::cout << "tiempo de busqueda : " << lastSearchTime << "\n";
+
+        return true;
+    } else {
+        std::cout << "DepthFS: No se pudo encontrar un camino" << std::endl;
+        return false;
+    }
 }
 
 bool StaticDisplayMap::executePathfindingBreadthFS() {
     if (!source.isValid() || !target.isValid()) {
-        std::cout << "nodos start y end no iniciados" << std::endl;
+        std::cout << "Error: Nodos de inicio y/o destino no están definidos" << std::endl;
+        return false;
     }
-
+    
     auto start = std::chrono::high_resolution_clock::now();
-    // Finalizar medición de tiempo
-    auto end = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::duration<double>>(end - start);
-    // std::cout << "Tiempo de ejecución: " << duration.count() << " segundos\n";
-    lastSearchTime = duration.count();
+
+    std::cout << "\n=== EJECUTANDO BREATH FS ===" << std::endl;
+    
+    // Limpiar resultado anterior
+    currentPathResult.clear();
+    
+    // Ejecutar algoritmo
+    currentPathResult = breadthFSAlgorithm.findShortestPath(source, target);
+    
+    // Mostrar estadísticas
+    currentPathResult.printStatistics();
+    
+    // Actualizar visualización si se encontró camino
+    if (currentPathResult.pathFound) {
+        updateTextureRoute();
+
+        // Finalizar medición de tiempo
+        auto end = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::duration<double>>(end - start);
+        // std::cout << "Tiempo de ejecución: " << duration.count() << " segundos\n";
+        lastSearchTime = duration.count();
+        std::cout << "tiempo de busqueda : " << lastSearchTime << "\n";
+
+        return true;
+    } else {
+        std::cout << "breadthFS: No se pudo encontrar un camino" << std::endl;
+        return false;
+    }
 }
 
 bool StaticDisplayMap::executePathfindingBestFS() {
     if (!source.isValid() || !target.isValid()) {
-        std::cout << "nodos start y end no iniciados" << std::endl;
+        std::cout << "Error: Nodos de inicio y/o destino no están definidos" << std::endl;
+        return false;
     }
-
+    
     auto start = std::chrono::high_resolution_clock::now();
-    // Finalizar medición de tiempo
-    auto end = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::duration<double>>(end - start);
-    // std::cout << "Tiempo de ejecución: " << duration.count() << " segundos\n";
-    lastSearchTime = duration.count();
+
+    std::cout << "\n=== EJECUTANDO BEST FS ===" << std::endl;
+    
+    // Limpiar resultado anterior
+    currentPathResult.clear();
+    
+    // Ejecutar algoritmo
+    currentPathResult = bestFSAlgorithm.findShortestPath(source, target);
+    
+    // Mostrar estadísticas
+    currentPathResult.printStatistics();
+    
+    // Actualizar visualización si se encontró camino
+    if (currentPathResult.pathFound) {
+        updateTextureRoute();
+
+        // Finalizar medición de tiempo
+        auto end = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::duration<double>>(end - start);
+        // std::cout << "Tiempo de ejecución: " << duration.count() << " segundos\n";
+        lastSearchTime = duration.count();
+        std::cout << "tiempo de busqueda : " << lastSearchTime << "\n";
+
+        return true;
+    } else {
+        std::cout << "BestFS: No se pudo encontrar un camino" << std::endl;
+        return false;
+    }
 }
 
 void StaticDisplayMap::clearCurrentPath() {
