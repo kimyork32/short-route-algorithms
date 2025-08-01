@@ -6,8 +6,9 @@
 
 class ShortestPathAStar : public GraphAlgorithmBase {
 public:
-    PathfindingResult findShortestPath(const GraphStructure& graph, 
-                                     const Point& startNode, 
+    ShortestPathAStar(const GraphStructure* graphPtr) : GraphAlgorithmBase(graphPtr) {}
+
+    PathfindingResult findShortestPath(const Point& startNode, 
                                      const Point& targetNode) override {
         
         auto startTime = std::chrono::high_resolution_clock::now();
@@ -17,7 +18,7 @@ public:
         // ========================
         // VALIDACIÓN INICIAL
         // ========================
-        if (!nodeExistsInGraph(graph, startNode) || !nodeExistsInGraph(graph, targetNode)) {
+        if (!nodeExistsInGraph(startNode) || !nodeExistsInGraph(targetNode)) {
             std::cout << "Error: Nodo de inicio o destino no existe en el grafo" << std::endl;
             return result;
         }
@@ -86,8 +87,8 @@ public:
             }
             
             // Explorar vecinos
-            auto nodeIterator = graph.find(currentNode);
-            if (nodeIterator != graph.end()) {
+            auto nodeIterator = (*graph).find(currentNode);
+            if (nodeIterator != (*graph).end()) {
                 for (const auto& [neighborNode, edgeData] : nodeIterator->second) {
                     
                     // Si ya procesamos este vecino, skip
@@ -153,6 +154,8 @@ public:
     std::string getAlgorithmDescription() const override {
         return "Optimización de Dijkstra que usa heurística para dirigir la búsqueda hacia el objetivo";
     }
+
+
 
 private:
   

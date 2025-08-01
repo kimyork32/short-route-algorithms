@@ -11,7 +11,9 @@ StaticDisplayMap::StaticDisplayMap(int width, int height, int size, int sizeNode
     : width(width), 
     height(height), 
     pointSize(size), 
-    sizeNodes(sizeNodes)
+    sizeNodes(sizeNodes),
+    dijkstraAlgorithm(&this->graph),
+    astarAlgorithm(&this->graph)
 {
 
     renderTexture.create(width, height);
@@ -264,23 +266,25 @@ float StaticDisplayMap::getDistance(Point& from, Point& to) {
         for (const auto& [to2, edgedata] : edgeList) {
             if (to2 == to) {
                 if (edgedata.first) {
-                    float distance = 0.f;
-                    Point current = from;
-                    const auto& geometry = edgedata.second;
-                    for (const Point& node : geometry) {
-                        distance += getDistanceNodes(current, node);
-                        current = node;
+                    if (edgedata.second.empty()) {
+                        return getDistance(to, from);
                     }
-                    distance += getDistanceNodes(current, to);
-                    return distance;
+                    else {
+                        float distance = 0.f;
+                        Point current = from;
+                        const auto& geometry = edgedata.second;
+                        for (const Point& mid : geometry) {
+                            distance += getDistanceNodes(current, mid);
+                            current = mid;
+                        }
+                        distance += getDistanceNodes(current, to);
+                        return distance;
+                    }
                 }
-                else {
-                    break;
-                }
+                return getDistanceNodes(from, to);
             }
         }
     }
-    return getDistanceNodes(from, to);
 }
 
 // ========================
@@ -314,7 +318,7 @@ bool StaticDisplayMap::executePathfindingAStar() {
     currentPathResult.clear();
     
     // Ejecutar algoritmo
-    currentPathResult = astarAlgorithm.findShortestPath(graph, source, target);
+    currentPathResult = astarAlgorithm.findShortestPath(source, target);
     
     // Mostrar estadísticas
     currentPathResult.printStatistics();

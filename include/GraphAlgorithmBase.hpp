@@ -72,11 +72,12 @@ struct PathfindingResult {
 // ========================
 class GraphAlgorithmBase {
 public:
+    GraphAlgorithmBase(const GraphStructure* graphPtr) : graph(graphPtr) {}
+
     virtual ~GraphAlgorithmBase() = default;
     
     // Método principal que debe implementar cada algoritmo específico
-    virtual PathfindingResult findShortestPath(const GraphStructure& graph, 
-                                              const Point& startNode, 
+    virtual PathfindingResult findShortestPath(const Point& startNode, 
                                               const Point& targetNode) = 0;
     
     // Información del algoritmo
@@ -84,6 +85,7 @@ public:
     virtual std::string getAlgorithmDescription() const = 0;
 
 protected:
+    const GraphStructure* graph;
     // ========================
     // UTILIDADES MATEMÁTICAS COMPARTIDAS
     // ========================
@@ -102,28 +104,34 @@ protected:
      * Calcula distancia real siguiendo la geometría de la ruta
      * Maneja la estructura pair<bool, vector<Point>>
      */
-    double calculateRealDistance(const Point& from, const Point& to, 
-                               const std::pair<bool, std::vector<Point>>& edgeData) const {
-        const auto& [hasGeometry, routeGeometry] = edgeData;
-        
-        if (!hasGeometry || routeGeometry.empty()) {
-            return calculateEuclideanDistance(from, to);
-        }
-        
-        double totalDistance = 0.0;
-        Point currentPoint = from;
-        
-        // Sumar distancias de cada segmento de la ruta
-        for (const auto& geometryPoint : routeGeometry) {
-            totalDistance += calculateEuclideanDistance(currentPoint, geometryPoint);
-            currentPoint = geometryPoint;
-        }
-        
-        // Último segmento hasta el destino
-        totalDistance += calculateEuclideanDistance(currentPoint, to);
-        return totalDistance;
-    }
     
+    float calculateRealDistance(const Point& from, const Point& to, const std::pair<bool, std::vector<Point>>& edgeData) const {
+        auto it = (*graph).find(from);
+        if (it != (*graph).end()) {
+            const auto& edgeList = it->second;
+            for (const auto& [to2, edgedata] : edgeList) {
+                if (to2 == to) {
+                    if (edgedata.first) {
+                        if (edgedata.second.empty()) {
+                            return calculateEuclideanDistance(to, from);
+                        }
+                        else {
+                            float distance = 0.f;
+                            Point current = from;
+                            const auto& geometry = edgedata.second;
+                            for (const Point& mid : geometry) {
+                                distance += calculateEuclideanDistance(current, mid);
+                                current = mid;
+                            }
+                            distance += calculateEuclideanDistance(current, to);
+                            return distance;
+                        }
+                    }
+                    return calculateEuclideanDistance(from, to);
+                }
+            }
+        }
+    }
     // ========================
     // UTILIDADES DE ALGORITMOS
     // ========================
@@ -161,18 +169,17 @@ protected:
     /**
      * Verifica si un nodo existe en el grafo
      */
-    bool nodeExistsInGraph(const GraphStructure& graph, const Point& node) const {
-        return graph.find(node) != graph.end();
+    bool nodeExistsInGraph(const Point& node) const {
+        return (*graph).find(node) != (*graph).end();
     }
     
     /**
      * Obtiene la distancia entre dos nodos adyacentes en el grafo
      * Retorna -1 si no están conectados directamente
      */
-    double getDistanceBetweenAdjacentNodes(const GraphStructure& graph, 
-                                         const Point& from, const Point& to) const {
-        auto nodeIterator = graph.find(from);
-        if (nodeIterator == graph.end()) return -1.0;
+    double getDistanceBetweenAdjacentNodes(const Point& from, const Point& to) const {
+        auto nodeIterator = (*graph).find(from);
+        if (nodeIterator == (*graph).end()) return -1.0;
         
         for (const auto& [neighbor, edgeData] : nodeIterator->second) {
             if (neighbor == to) {
@@ -186,8 +193,7 @@ protected:
     /**
      * Calcula la distancia total de un camino completo
      */
-    double calculatePathTotalDistance(const GraphStructure& graph, 
-                                    const std::vector<Point>& path) const {
+    double calculatePathTotalDistance(const std::vector<Point>& path) const {
         if (path.size() < 2) return 0.0;
         
         double totalDistance = 0.0;
@@ -197,8 +203,8 @@ protected:
             const Point& to = path[i + 1];
             
             // Buscar la arista en el grafo para obtener la geometría
-            auto nodeIterator = graph.find(from);
-            if (nodeIterator != graph.end()) {
+            auto nodeIterator = (*graph).find(from);
+            if (nodeIterator != (*graph).end()) {
                 for (const auto& [neighbor, edgeData] : nodeIterator->second) {
                     if (neighbor == to) {
                         totalDistance += calculateRealDistance(from, to, edgeData);
