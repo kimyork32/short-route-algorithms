@@ -12,6 +12,7 @@ public:
     void updateOpt(int x, int y);
     void updateShow(int sizeNodes);
     void updateMinimap(sf::Vector2f coordinates, sf::Sprite window);
+    void updatePerformance(float buildTime, float seachTime, int sizeRoute, float memUsed);
 
     int getHeight() const;
     int getWidthShow() const;
@@ -51,6 +52,9 @@ private:
 
     sf::RenderTexture renderTextureMinimap;
     sf::Sprite spriteMinimap;
+
+    sf::RenderTexture renderTexturePerformance;
+    sf::Sprite spritePerformance;
 
     // CONDICIONALES
     Select sl;

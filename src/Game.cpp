@@ -211,6 +211,13 @@ void Game::update() {
     hud.updateShow(grid.getSizeNodes());
     hud.updateOpt(-1, -1);
     hud.updateMinimap(posWin, grid.getMapSprite());
+
+    hud.updatePerformance(
+        grid.getLastBuildTime(), 
+        grid.getLastSearchTime(), 
+        grid.getLastRouteSize(), 
+        grid.getEstimatedMemoryUsage()
+    );
 }
 
 void Game::render() {
@@ -229,6 +236,15 @@ void Game::calculateRoute() {
             break;
         case Algorithm::A_STAR: 
             grid.executePathfindingAStar();
+            break;
+        case Algorithm::DEPTHFS: 
+            grid.executePathfindingDetphFS();
+            break;
+        case Algorithm::BREADTHFS: 
+            grid.executePathfindingBreadthFS();
+            break;
+        case Algorithm::BESTFS: 
+            grid.executePathfindingBestFS();
             break;
     }
 }

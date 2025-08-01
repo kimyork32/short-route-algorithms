@@ -291,6 +291,13 @@ bool StaticDisplayMap::executePathfindingDijkstra() {
     if (!source.isValid() || !target.isValid()) {
         std::cout << "nodos start y end no iniciados" << std::endl;
     }
+
+    auto start = std::chrono::high_resolution_clock::now();
+    // Finalizar medición de tiempo
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::duration<double>>(end - start);
+    // std::cout << "Tiempo de ejecución: " << duration.count() << " segundos\n";
+    lastSearchTime = duration.count();
 }
 
 bool StaticDisplayMap::executePathfindingAStar() {
@@ -299,6 +306,8 @@ bool StaticDisplayMap::executePathfindingAStar() {
         return false;
     }
     
+    auto start = std::chrono::high_resolution_clock::now();
+
     std::cout << "\n=== EJECUTANDO A* ===" << std::endl;
     
     // Limpiar resultado anterior
@@ -313,17 +322,64 @@ bool StaticDisplayMap::executePathfindingAStar() {
     // Actualizar visualización si se encontró camino
     if (currentPathResult.pathFound) {
         updateTextureRoute();
-        std::cout << "A*: Camino dibujado en el mapa" << std::endl;
-        for (const Point& node : currentPathResult.optimalPath) {
-            std::cout << node.x << " " << node.y << std::endl;
-        }
-        std::cout << "source: " << source.x << " " << source.y << "\n";
-        std::cout << "target: " << target.x << " " << target.y << "\n";
+        // std::cout << "A*: Camino dibujado en el mapa" << std::endl;
+        // for (const Point& node : currentPathResult.optimalPath) {
+        //     std::cout << node.x << " " << node.y << std::endl;
+        // }
+        // std::cout << "source: " << source.x << " " << source.y << "\n";
+        // std::cout << "target: " << target.x << " " << target.y << "\n";
+
+        // Finalizar medición de tiempo
+        auto end = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::duration<double>>(end - start);
+        // std::cout << "Tiempo de ejecución: " << duration.count() << " segundos\n";
+        lastSearchTime = duration.count();
+        std::cout << "tiempo de busqueda : " << lastSearchTime << "\n";
+
         return true;
     } else {
         std::cout << "A*: No se pudo encontrar un camino" << std::endl;
         return false;
     }
+}
+
+bool StaticDisplayMap::executePathfindingDetphFS() {
+    if (!source.isValid() || !target.isValid()) {
+        std::cout << "nodos start y end no iniciados" << std::endl;
+    }
+
+    auto start = std::chrono::high_resolution_clock::now();
+    // Finalizar medición de tiempo
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::duration<double>>(end - start);
+    // std::cout << "Tiempo de ejecución: " << duration.count() << " segundos\n";
+    lastSearchTime = duration.count();
+}
+
+bool StaticDisplayMap::executePathfindingBreadthFS() {
+    if (!source.isValid() || !target.isValid()) {
+        std::cout << "nodos start y end no iniciados" << std::endl;
+    }
+
+    auto start = std::chrono::high_resolution_clock::now();
+    // Finalizar medición de tiempo
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::duration<double>>(end - start);
+    // std::cout << "Tiempo de ejecución: " << duration.count() << " segundos\n";
+    lastSearchTime = duration.count();
+}
+
+bool StaticDisplayMap::executePathfindingBestFS() {
+    if (!source.isValid() || !target.isValid()) {
+        std::cout << "nodos start y end no iniciados" << std::endl;
+    }
+
+    auto start = std::chrono::high_resolution_clock::now();
+    // Finalizar medición de tiempo
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::duration<double>>(end - start);
+    // std::cout << "Tiempo de ejecución: " << duration.count() << " segundos\n";
+    lastSearchTime = duration.count();
 }
 
 void StaticDisplayMap::clearCurrentPath() {
@@ -355,10 +411,9 @@ void StaticDisplayMap::genRandPoints(std::vector<CGALPoint>& puntos, int start, 
 }
 
 void StaticDisplayMap::genRandGraph() {
-    std::cout << "creancion de nodos aleatorio" << std::endl;
-
     auto start = std::chrono::high_resolution_clock::now();
 
+    std::cout << "creancion de nodos aleatorio" << std::endl;
     std::vector<CGALPoint> puntos(sizeNodes);
     std::vector<std::thread> threads;
     // std::random_device rd;
@@ -381,28 +436,28 @@ void StaticDisplayMap::genRandGraph() {
     }
 
 
-    // Finalizar medición de tiempo
-    auto end = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::duration<double>>(end - start);
-
-    std::cout << "Tiempo de ejecución: " << duration.count() << " segundos\n";
+    // // Finalizar medición de tiempo
+    // auto end = std::chrono::high_resolution_clock::now();
+    // auto duration = std::chrono::duration_cast<std::chrono::duration<double>>(end - start);
+    //
+    // std::cout << "Tiempo de ejecución: " << duration.count() << " segundos\n";
 
     std::cout << "delaunay" << std::endl;
-    start = std::chrono::high_resolution_clock::now();
+    // start = std::chrono::high_resolution_clock::now();
 
     Delaunay dt;
     dt.insert(puntos.begin(), puntos.end());
 
-    // Finalizar medición de tiempo
-    end = std::chrono::high_resolution_clock::now();
-    duration = std::chrono::duration_cast<std::chrono::duration<double>>(end - start);
+    // // Finalizar medición de tiempo
+    // end = std::chrono::high_resolution_clock::now();
+    // duration = std::chrono::duration_cast<std::chrono::duration<double>>(end - start);
 
-    std::cout << "Tiempo de ejecución: " << duration.count() << " segundos\n";
+    // std::cout << "Tiempo de ejecución: " << duration.count() << " segundos\n";
 
     std::cout << "puntos de triangulacion creadas\n";
 
 
-    start = std::chrono::high_resolution_clock::now();
+    // start = std::chrono::high_resolution_clock::now();
 
     graph.clear();
 
@@ -428,19 +483,20 @@ void StaticDisplayMap::genRandGraph() {
         graph[p2].emplace_back(p1, std::pair<bool, std::vector<Point>>{false, {}});
     }
 
-    // Finalizar medición de tiempo
-    end = std::chrono::high_resolution_clock::now();
-    duration = std::chrono::duration_cast<std::chrono::duration<double>>(end - start);
+    // // Finalizar medición de tiempo
+    // end = std::chrono::high_resolution_clock::now();
+    // duration = std::chrono::duration_cast<std::chrono::duration<double>>(end - start);
 
-    std::cout << "Tiempo de ejecución: " << duration.count() << " segundos\n";
+    // std::cout << "Tiempo de ejecución: " << duration.count() << " segundos\n";
 
-    start = std::chrono::high_resolution_clock::now();
+    // start = std::chrono::high_resolution_clock::now();
     updateTextureAll();
 
     // Finalizar medición de tiempo
-    end = std::chrono::high_resolution_clock::now();
-    duration = std::chrono::duration_cast<std::chrono::duration<double>>(end - start);
-    std::cout << "Tiempo de ejecución: " << duration.count() << " segundos\n";
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::duration<double>>(end - start);
+    // std::cout << "Tiempo de ejecución: " << duration.count() << " segundos\n";
+    lastBuildTime = duration.count();
 
     std::cout << "load factor: " << graph.load_factor() << "\n";
     std::cout << "bucket count: " << graph.bucket_count() << "\n";
@@ -773,6 +829,9 @@ std::vector<int> StaticDisplayMap::normalizedPoints(std::vector<double> points, 
 }
 
 void StaticDisplayMap::txtPointsToGraph(int mapWidth, int mapHeight, std::string path) {
+
+    auto start = std::chrono::high_resolution_clock::now();
+
     std::ifstream file(path);
     if (!file.is_open()) {
         std::cerr << "fallo al abrir " << path << "\n";
@@ -851,6 +910,12 @@ void StaticDisplayMap::txtPointsToGraph(int mapWidth, int mapHeight, std::string
     // };
     // updateTextureRoute();
 
+    // Finalizar medición de tiempo
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::duration<double>>(end - start);
+    // std::cout << "Tiempo de ejecución: " << duration.count() << " segundos\n";
+    lastBuildTime = duration.count();
+
     file.close();
 }
 
@@ -860,5 +925,21 @@ int StaticDisplayMap::getSizeNodes() const {
 
 sf::Sprite StaticDisplayMap::getMapSprite() const {
     return mapSprite;
+}
+
+float StaticDisplayMap::getLastBuildTime() const {
+    return lastBuildTime;
+}
+
+float StaticDisplayMap::getLastSearchTime() const {
+    return lastSearchTime;
+}
+
+int StaticDisplayMap::getLastRouteSize() const {
+    return lastRouteSize;
+}
+
+float StaticDisplayMap::getEstimatedMemoryUsage() const {
+    return estimatedMemoryUsage;
 }
 

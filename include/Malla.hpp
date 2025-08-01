@@ -33,6 +33,9 @@ public:
     // ALGORITMOS DE PATHFINDING
     bool executePathfindingDijkstra();
     bool executePathfindingAStar();
+    bool executePathfindingDetphFS();
+    bool executePathfindingBreadthFS();
+    bool executePathfindingBestFS();
     void clearCurrentPath();
     void printPathStatistics() const;
 
@@ -69,6 +72,11 @@ public:
     int getSizeNodes() const;
     sf::Sprite getMapSprite() const;
 
+    float getLastBuildTime() const;
+    float getLastSearchTime() const;
+    int getLastRouteSize() const;
+    float getEstimatedMemoryUsage() const;
+
 private:
     int width, height, pointSize;
 
@@ -86,6 +94,11 @@ private:
     ShortestPathDijkstra dijkstraAlgorithm;
     ShortestPathAStar astarAlgorithm;
     PathfindingResult currentPathResult;
+
+    float lastBuildTime = 0.f;
+    float lastSearchTime = 0.f;
+    int lastRouteSize = 0;
+    float estimatedMemoryUsage = 0.f;
 };
 
 #endif

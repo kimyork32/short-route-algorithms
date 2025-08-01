@@ -14,6 +14,9 @@ enum class Mode {
 enum class Algorithm {
     A_STAR,
     DIJKSTRA,
+    DEPTHFS,
+    BREADTHFS,
+    BESTFS,
     COUNT
 };
 

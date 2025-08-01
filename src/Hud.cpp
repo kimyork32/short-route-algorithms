@@ -1,4 +1,6 @@
 #include "../include/Hud.hpp"
+#include <sstream>
+#include <iomanip>
 #include <cmath>
 #include <iostream>
 
@@ -15,15 +17,18 @@ Hud::Hud(int widthWinFloat, int heightWinFloat)
     renderTextureShow.create(widthShow, height);
     renderTextureOpt.create(widthOpt, height);
     renderTextureMinimap.create(widthWinFloat * widthScaleMinimap, heightWinFloat * heightScaleMinimap);
+    renderTexturePerformance.create(widthOpt, height);
     spriteShow.setPosition(0, 0);
     spriteOpt.setPosition(0, 0);
     spriteMinimap.setPosition(0, 0);
+    spritePerformance.setPosition(0, 0);
 }
 
 void Hud::render(sf::RenderWindow& window) {
     window.draw(spriteShow);
     window.draw(spriteOpt);
     window.draw(spriteMinimap);
+    window.draw(spritePerformance);
     // std::cout << "spriteMinimap dibujado" << std::endl;
 }
 
@@ -190,6 +195,9 @@ void Hud::updateShow(int sizeNodes) {
     switch (alg) {
         case Algorithm::A_STAR: text.setString("Alg: A*"); break;
         case Algorithm::DIJKSTRA: text.setString("Alg: Dijkstra"); break;
+        case Algorithm::DEPTHFS: text.setString("Alg: DepthFS"); break;
+        case Algorithm::BREADTHFS: text.setString("Alg: BreadthFS"); break;
+        case Algorithm::BESTFS: text.setString("Alg: BestFS"); break;
     }
     text.setPosition(space * 1 + sepLeft, sepTop);
     renderTextureShow.draw(text);
@@ -218,6 +226,80 @@ void Hud::updateShow(int sizeNodes) {
     renderTextureShow.display();
     spriteShow.setTexture(renderTextureShow.getTexture(), true);
     spriteShow.setPosition(static_cast<float>(posX), static_cast<float>(posY));
+}
+
+    // • Tiempo de construcción del grafo
+    // • Tiempo de búsqueda
+    // • Tamaño de la ruta encontrada
+    // • Memoria usada
+
+void Hud::updatePerformance(float buildTime, float searchTime, int sizeRoute, float memUsed) {
+    // std::cout << "update performance\n";
+    renderTexturePerformance.clear(sf::Color{0x373737FF});
+
+    const float space = 120.f; 
+    const int numItems = 4;
+    const float shiftDown = heightWinFloat - height;
+    const int textSize = 12;
+    const float sepTop = 5.f; 
+    const float sepLeft = 10.f;
+
+    sf::RectangleShape bar(sf::Vector2f(space * numItems, height));
+    bar.setPosition(0, 0);
+    bar.setFillColor(sf::Color::Black);
+    renderTexturePerformance.draw(bar);
+
+    sf::Font font;
+    if (!font.loadFromFile("fonts/Roboto-Black.ttf")) return;
+
+    sf::RectangleShape rect(sf::Vector2f(space, height - 4.f));
+    rect.setPosition(space * 0 + 2.f, 2.f);
+    rect.setFillColor(sf::Color::Black);
+    rect.setOutlineThickness(2.f);
+    rect.setOutlineColor(sf::Color(175, 177, 219));
+    renderTexturePerformance.draw(rect);
+
+    rect.setPosition(space * 1 + 2.f, 2.f);
+    renderTexturePerformance.draw(rect);
+
+    rect.setPosition(space * 2 + 2.f, 2.f);
+    renderTexturePerformance.draw(rect);
+
+    rect.setPosition(space * 3 + 2.f, 2.f);
+    renderTexturePerformance.draw(rect);
+
+    sf::Text text;
+    text.setFont(font);
+    text.setCharacterSize(textSize);
+    text.setFillColor(sf::Color::White);
+
+    std::ostringstream ss;
+
+    ss.str(""); ss.clear();
+    ss << std::fixed << std::setprecision(2) << buildTime;
+    text.setString("Build: " + ss.str() + " seg");
+    text.setPosition(space * 0 + sepLeft, sepTop);
+    renderTexturePerformance.draw(text);
+
+    ss.str(""); ss.clear();
+    ss << std::fixed << std::setprecision(4) << searchTime;
+    text.setString("Search: " + ss.str() + " seg");
+    text.setPosition(space * 1 + sepLeft, sepTop);
+    renderTexturePerformance.draw(text);
+
+    text.setString("Ruta: " + std::to_string(sizeRoute));
+    text.setPosition(space * 2 + sepLeft, sepTop);
+    renderTexturePerformance.draw(text);
+
+    ss.str(""); ss.clear();
+    ss << std::fixed << std::setprecision(2) << memUsed;
+    text.setString("Mem: " + ss.str() + " MB");
+    text.setPosition(space * 3 + sepLeft, sepTop);
+    renderTexturePerformance.draw(text);
+
+    renderTexturePerformance.display();
+    spritePerformance.setTexture(renderTexturePerformance.getTexture(), true);
+    spritePerformance.setPosition(posX, posY + shiftDown);
 }
 
 int Hud::getHeight() const {
