@@ -190,6 +190,7 @@ void Hud::updateShow(int sizeNodes) {
     switch (alg) {
         case Algorithm::A_STAR: text.setString("Alg: A*"); break;
         case Algorithm::DIJKSTRA: text.setString("Alg: Dijkstra"); break;
+        case Algorithm::COUNT: break;
     }
     text.setPosition(space * 1 + sepLeft, sepTop);
     renderTextureShow.draw(text);
@@ -199,6 +200,7 @@ void Hud::updateShow(int sizeNodes) {
         case Map::LIMA: text.setString("Mapa: Lima"); break;
         case Map::AREQUIPA: text.setString("Mapa: Arequipa"); break;
         case Map::NEW_YORK: text.setString("Mapa: New York"); break;
+        case Map::COUNT: break;
     }
     text.setPosition(space * 2 + sepLeft, sepTop);
     renderTextureShow.draw(text);
@@ -210,6 +212,9 @@ void Hud::updateShow(int sizeNodes) {
         case Mode::REMOVE_ARISTS: text.setString("Remover Aristas"); break;
         case Mode::REMOVE_NODE: text.setString("Remover Nodo"); break;
         case Mode::SELECT_START_END_NODE: text.setString("Select nodes route"); break;
+        case Mode::PLACE_BARRIERS: text.setString("Colocar Barreras"); break;
+        case Mode::REMOVE_BARRIERS: text.setString("Remover Barreras"); break;
+        case Mode::COUNT: break;
     }
     text.setPosition(space * 3 + sepLeft, sepTop);
     renderTextureShow.draw(text);

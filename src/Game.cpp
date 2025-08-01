@@ -188,6 +188,9 @@ void Game::processEvents() {
                             grid.removeBarrierNode(mousePos);
                         }
                         break;
+                    
+                    case Mode::COUNT:
+                        break;
                 }
             }
 
@@ -311,6 +314,8 @@ void Game::calculateRoute() {
         case Algorithm::A_STAR: 
             grid.executePathfindingAStar();
             break;
+        case Algorithm::COUNT:
+            break;
     }
 }
 void Game::generateMap() {
@@ -328,6 +333,8 @@ void Game::generateMap() {
             break;
         case Map::NEW_YORK: 
             grid.genNewYork(mapWidth, mapHeight);
+            break;
+        case Map::COUNT:
             break;
     }
 }

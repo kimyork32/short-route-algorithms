@@ -1,7 +1,6 @@
 #pragma once
 #include "Point.hpp"
-#include <vector>
-#include <unordered_map>
+#include "data_structures/DataStructures.hpp"
 #include <string>
 #include <cmath>
 #include <algorithm>
@@ -9,28 +8,31 @@
 #include <iostream>
 #include <functional>
 
+// Use custom data structures with gradual migration support
+using namespace ds::pathfinding;
+
 // ========================
 // ALIAS PARA SIMPLIFICAR
 // ========================
-using GraphStructure = std::unordered_map<Point, std::vector<std::pair<Point, std::pair<bool, std::vector<Point>>>>>;
+using GraphStructure = DS_GRAPH_STRUCTURE;
 
 // ========================
 // RESULTADO DE ALGORITMOS
 // ========================
 struct PathfindingResult {
     // Resultado principal
-    std::vector<Point> optimalPath;         // Camino más corto encontrado
-    double totalDistance = 0.0;            // Distancia total del camino
-    bool pathFound = false;                 // ¿Se encontró un camino?
+    DS_POINT_PATH optimalPath;                      // Camino más corto encontrado
+    double totalDistance = 0.0;                    // Distancia total del camino
+    bool pathFound = false;                        // ¿Se encontró un camino?
     
     // Estadísticas del algoritmo
-    int nodesExplored = 0;                  // Cuántos nodos se visitaron
-    std::chrono::milliseconds executionTime{0}; // Tiempo de ejecución
-    std::string algorithmName;              // Nombre del algoritmo usado
+    int nodesExplored = 0;                         // Cuántos nodos se visitaron
+    std::chrono::milliseconds executionTime{0};   // Tiempo de ejecución
+    std::string algorithmName;                     // Nombre del algoritmo usado
     
     // Información detallada (para visualización avanzada)
-    std::unordered_map<Point, double> calculatedDistances;    // Distancias a cada nodo
-    std::unordered_map<Point, Point> parentNodes;             // Padres para reconstruir camino
+    DS_POINT_DISTANCE_MAP calculatedDistances;    // Distancias a cada nodo
+    DS_POINT_PARENT_MAP parentNodes;              // Padres para reconstruir camino
     
     // Constructores
     PathfindingResult() = default;
@@ -87,6 +89,8 @@ public:
                                                          std::function<bool(const Point&)> isNodeBlocked,
                                                          std::function<bool(const Point&, const Point&)> isEdgeBlocked) {
         // Implementación por defecto que ignora las barreras
+        (void)isNodeBlocked;  // Evitar warning de parámetro no usado
+        (void)isEdgeBlocked;  // Evitar warning de parámetro no usado
         return findShortestPath(graph, startNode, targetNode);
     }
     
@@ -143,10 +147,10 @@ protected:
      * Reconstruye el camino desde el nodo destino hasta el origen
      * usando la tabla de nodos padre
      */
-    std::vector<Point> reconstructOptimalPath(const std::unordered_map<Point, Point>& parentNodes,
-                                            const Point& startNode, 
-                                            const Point& targetNode) const {
-        std::vector<Point> path;
+    DS_POINT_PATH reconstructOptimalPath(const DS_POINT_PARENT_MAP& parentNodes,
+                                        const Point& startNode, 
+                                        const Point& targetNode) const {
+        DS_POINT_PATH path = DS_CREATE_PATH(50);
         Point currentNode = targetNode;
         
         // Caminar hacia atrás desde destino hasta origen
@@ -156,7 +160,7 @@ protected:
             auto parentIterator = parentNodes.find(currentNode);
             if (parentIterator == parentNodes.end()) {
                 // No hay camino válido
-                return {};
+                return DS_POINT_PATH{};
             }
             currentNode = parentIterator->second;
         }
@@ -198,7 +202,7 @@ protected:
      * Calcula la distancia total de un camino completo
      */
     double calculatePathTotalDistance(const GraphStructure& graph, 
-                                    const std::vector<Point>& path) const {
+                                    const DS_POINT_PATH& path) const {
         if (path.size() < 2) return 0.0;
         
         double totalDistance = 0.0;
