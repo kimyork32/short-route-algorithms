@@ -1,14 +1,11 @@
 #include "../include/Malla.hpp"
+#include "../include/CGALincludes.hpp"
 #include <iostream>
 #include <random>
+#include <thread>
 #include <fstream>
 #include <chrono>
-#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
-#include <CGAL/Delaunay_triangulation_2.h>
 
-typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
-typedef CGAL::Delaunay_triangulation_2<K> Delaunay;
-typedef K::Point_2 CGALPoint;
 
 StaticDisplayMap::StaticDisplayMap(int width, int height, int size, int sizeNodes)
     : width(width), 
@@ -22,6 +19,8 @@ StaticDisplayMap::StaticDisplayMap(int width, int height, int size, int sizeNode
     target = {-1, -1};
     // genRandGraph();
     genLima(10000, 10000);
+    std::cout << "load factor: " << graph.load_factor() << "\n";
+    std::cout << "bucket count: " << graph.bucket_count() << "\n";
 }
 
 
@@ -315,6 +314,11 @@ bool StaticDisplayMap::executePathfindingAStar() {
     if (currentPathResult.pathFound) {
         updateTextureRoute();
         std::cout << "A*: Camino dibujado en el mapa" << std::endl;
+        for (const Point& node : currentPathResult.optimalPath) {
+            std::cout << node.x << " " << node.y << std::endl;
+        }
+        std::cout << "source: " << source.x << " " << source.y << "\n";
+        std::cout << "target: " << target.x << " " << target.y << "\n";
         return true;
     } else {
         std::cout << "A*: No se pudo encontrar un camino" << std::endl;
@@ -324,7 +328,7 @@ bool StaticDisplayMap::executePathfindingAStar() {
 
 void StaticDisplayMap::clearCurrentPath() {
     currentPathResult.clear();
-    route.clear();
+    // route.clear();
     updateTextureAll(); // Redibujar mapa sin el camino
 }
 
@@ -336,35 +340,62 @@ void StaticDisplayMap::printPathStatistics() const {
     }
 }
 
-void StaticDisplayMap::genRandGraph() {
-    std::cout << "creando mapa random" << std::endl;
-
-    auto start = std::chrono::high_resolution_clock::now();
-
-    using Kernel = CGAL::Exact_predicates_inexact_constructions_kernel;
-    using Delaunay = CGAL::Delaunay_triangulation_2<Kernel>;
-    using CGALPoint = Kernel::Point_2;
-
-    std::random_device rd;
-    std::mt19937 gen(rd());
+void StaticDisplayMap::genRandPoints(std::vector<CGALPoint>& puntos, int start, int end, unsigned seed) {
+    std::mt19937 gen(seed);
     // std::uniform_int_distribution<> distrib(0, coordMax);
     std::uniform_int_distribution<> distribX(0, width - 1);
     std::uniform_int_distribution<> distribY(0, height - 1);
 
-    std::vector<CGALPoint> puntos;
 
-    for (int i = 0; i < sizeNodes; ++i) {
+    for (int i = start; i < end; i++) {
         int x = distribX(gen);
         int y = distribY(gen);
-        puntos.emplace_back(x, y);
+        puntos[i] = CGALPoint(x, y);
     }
+}
+
+void StaticDisplayMap::genRandGraph() {
+    std::cout << "creancion de nodos aleatorio" << std::endl;
+
+    auto start = std::chrono::high_resolution_clock::now();
+
+    std::vector<CGALPoint> puntos(sizeNodes);
+    std::vector<std::thread> threads;
+    // std::random_device rd;
+    int numThreads = std::thread::hardware_concurrency();
+
+    int chunkSize = sizeNodes / numThreads;
+
+    // Crear hilos
+    for (int i = 0; i < numThreads; ++i) {
+        int start = i * chunkSize;
+        int end = (i == numThreads - 1) ? sizeNodes : start + chunkSize;
+
+        // Usar diferentes seeds para evitar repetición
+        threads.emplace_back(&StaticDisplayMap::genRandPoints, this, std::ref(puntos), start, end, std::random_device{}());
+    }
+
+    // Esperar a que todos los hilos terminen
+    for (auto& t : threads) {
+        t.join();
+    }
+
+
+    // Finalizar medición de tiempo
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::duration<double>>(end - start);
+
+    std::cout << "Tiempo de ejecución: " << duration.count() << " segundos\n";
+
+    std::cout << "delaunay" << std::endl;
+    start = std::chrono::high_resolution_clock::now();
 
     Delaunay dt;
     dt.insert(puntos.begin(), puntos.end());
 
     // Finalizar medición de tiempo
-    auto end = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::duration<double>>(end - start);
+    end = std::chrono::high_resolution_clock::now();
+    duration = std::chrono::duration_cast<std::chrono::duration<double>>(end - start);
 
     std::cout << "Tiempo de ejecución: " << duration.count() << " segundos\n";
 
@@ -410,6 +441,9 @@ void StaticDisplayMap::genRandGraph() {
     end = std::chrono::high_resolution_clock::now();
     duration = std::chrono::duration_cast<std::chrono::duration<double>>(end - start);
     std::cout << "Tiempo de ejecución: " << duration.count() << " segundos\n";
+
+    std::cout << "load factor: " << graph.load_factor() << "\n";
+    std::cout << "bucket count: " << graph.bucket_count() << "\n";
 }
 
 void StaticDisplayMap::genArequipa(int mapWidth, int mapHeight) {
@@ -497,79 +531,128 @@ void StaticDisplayMap::updateTextureUnit(Point* from, Point* to, sf::Color color
 
 
 void StaticDisplayMap::updateTextureRoute(){
-    if (route.empty()) {
-        std::cerr << "ruta vacia" << std::endl;
-        return;
-    }
-    for (const auto& [from, to]: route) {
-        auto it = graph.find(from);
-        if (it != graph.end()) {
-            const auto& edgeList = it->second;
-            for (const auto& [to2, edgeData] : edgeList) {
-                if (to2 == to) {
-                    // existe geometry
-                    if (edgeData.first) {
-                        // si geometry esta vacio, entocnes está en el otro nodo 
-                        if (edgeData.second.empty()) {
-                            auto it2 = graph.find(to);
-                            if (it2 != graph.end()) {
-                                const auto& edgeList2 = it2->second;
-                                for (const auto& [to3, edgeData2] : edgeList2) {
-                                    if (to3 == to) {
-                                        Point current = to3;
-                                        const auto& geometry = edgeData2.second;
-                                        for (const Point& node : geometry) {
-                                            sf::VertexArray segment(sf::Lines, 2);
-                                            segment[0].position = sf::Vector2f(current.x, current.y);
-                                            segment[0].color = sf::Color::Blue;
-                                            segment[1].position = sf::Vector2f(node.x, node.y);
-                                            segment[1].color = sf::Color::Blue;
-                                            renderTexture.draw(segment);
-                                        }
-                                        sf::VertexArray segment(sf::Lines, 2);
-                                        segment[0].position = sf::Vector2f(current.x, current.y);
-                                        segment[0].color = sf::Color::Blue;
-                                        segment[1].position = sf::Vector2f(to3.x, to3.y);
-                                        segment[1].color = sf::Color::Blue;
-                                        renderTexture.draw(segment);
-                                    }
+    // probando para aStar 
+    std::vector<Point>* route = &currentPathResult.optimalPath;
+    for (int i = 0; i <route->size() - 1; i++) {
+        auto it = graph.find(route->at(i));
+        Point* to = &route->at(i + 1);
+        const auto& edges = it->second;
+        for (const auto& [to2, edgeData] : edges) {
+            if (to2 == *to) {
+                // tiene geometry
+                if (edgeData.first) {
+                    // no esta geometry en el nodo actual, buscar en el siguiente
+                    if (edgeData.second.empty()) {
+                        auto it2 = graph.find(*to);
+                        const auto& edges2 = it2->second;
+                        for (const auto& [to3, edgeData2] : edges2) {
+                            if (to3 == it->first) {
+                                Point current = to3;
+                                for (const auto& mid : edgeData2.second) {
+                                    drawSegment(&current, &mid, sf::Color::Blue);
+                                    current = mid;
                                 }
+                                drawSegment(&current, &it->first, sf::Color::Blue);
+                                break;
                             }
-                        }
-                        else {
-                            Point current = from;
-                            const auto& geometry = edgeData.second;
-                            for (const Point& node : geometry) {
-                                sf::VertexArray segment(sf::Lines, 2);
-                                segment[0].position = sf::Vector2f(current.x, current.y);
-                                segment[0].color = sf::Color::Blue;
-                                segment[1].position = sf::Vector2f(node.x, node.y);
-                                segment[1].color = sf::Color::Blue;
-                                renderTexture.draw(segment);
-                            }
-                            sf::VertexArray segment(sf::Lines, 2);
-                            segment[0].position = sf::Vector2f(current.x, current.y);
-                            segment[0].color = sf::Color::Blue;
-                            segment[1].position = sf::Vector2f(to2.x, to2.y);
-                            segment[1].color = sf::Color::Blue;
-                            renderTexture.draw(segment);
                         }
                     }
+                    // si esta geometry 
                     else {
-                        sf::VertexArray segment(sf::Lines, 2);
-                        segment[0].position = sf::Vector2f(from.x, from.y);
-                        segment[0].color = sf::Color::Blue;
-                        segment[1].position = sf::Vector2f(to2.x, to2.y);
-                        segment[1].color = sf::Color::Blue;
-                        renderTexture.draw(segment);
+                        Point current = it->first;
+                        for (const auto& mid : edgeData.second) {
+                            drawSegment(&current, &mid, sf::Color::Blue);
+                            current = mid;
+                        }
+                        drawSegment(&current, to, sf::Color::Blue);
                     }
                 }
+                // no tiene geometry = segment
+                else {
+                    drawSegment(&it->first, to, sf::Color::Blue);
+                }
+                drawCircle(&it->first, sf::Color::Red);
+                drawCircle(to, sf::Color::Red);
+                break;
             }
         }
     }
-    renderTexture.display();
-    mapSprite.setTexture(renderTexture.getTexture());
 }
+
+// void StaticDisplayMap::updateTextureRoute(){
+//     if (route.empty()) {
+//         std::cerr << "ruta vacia" << std::endl;
+//         return;
+//     }
+//     for (const auto& [from, to]: route) {
+//         auto it = graph.find(from);
+//         if (it != graph.end()) {
+//             const auto& edgeList = it->second;
+//             for (const auto& [to2, edgeData] : edgeList) {
+//                 if (to2 == to) {
+//                     // existe geometry
+//                     if (edgeData.first) {
+//                         // si geometry esta vacio, entocnes está en el otro nodo 
+//                         if (edgeData.second.empty()) {
+//                             auto it2 = graph.find(to);
+//                             if (it2 != graph.end()) {
+//                                 const auto& edgeList2 = it2->second;
+//                                 for (const auto& [to3, edgeData2] : edgeList2) {
+//                                     if (to3 == to) {
+//                                         Point current = to3;
+//                                         const auto& geometry = edgeData2.second;
+//                                         for (const Point& node : geometry) {
+//                                             sf::VertexArray segment(sf::Lines, 2);
+//                                             segment[0].position = sf::Vector2f(current.x, current.y);
+//                                             segment[0].color = sf::Color::Blue;
+//                                             segment[1].position = sf::Vector2f(node.x, node.y);
+//                                             segment[1].color = sf::Color::Blue;
+//                                             renderTexture.draw(segment);
+//                                         }
+//                                         sf::VertexArray segment(sf::Lines, 2);
+//                                         segment[0].position = sf::Vector2f(current.x, current.y);
+//                                         segment[0].color = sf::Color::Blue;
+//                                         segment[1].position = sf::Vector2f(to3.x, to3.y);
+//                                         segment[1].color = sf::Color::Blue;
+//                                         renderTexture.draw(segment);
+//                                     }
+//                                 }
+//                             }
+//                         }
+//                         else {
+//                             Point current = from;
+//                             const auto& geometry = edgeData.second;
+//                             for (const Point& node : geometry) {
+//                                 sf::VertexArray segment(sf::Lines, 2);
+//                                 segment[0].position = sf::Vector2f(current.x, current.y);
+//                                 segment[0].color = sf::Color::Blue;
+//                                 segment[1].position = sf::Vector2f(node.x, node.y);
+//                                 segment[1].color = sf::Color::Blue;
+//                                 renderTexture.draw(segment);
+//                             }
+//                             sf::VertexArray segment(sf::Lines, 2);
+//                             segment[0].position = sf::Vector2f(current.x, current.y);
+//                             segment[0].color = sf::Color::Blue;
+//                             segment[1].position = sf::Vector2f(to2.x, to2.y);
+//                             segment[1].color = sf::Color::Blue;
+//                             renderTexture.draw(segment);
+//                         }
+//                     }
+//                     else {
+//                         sf::VertexArray segment(sf::Lines, 2);
+//                         segment[0].position = sf::Vector2f(from.x, from.y);
+//                         segment[0].color = sf::Color::Blue;
+//                         segment[1].position = sf::Vector2f(to2.x, to2.y);
+//                         segment[1].color = sf::Color::Blue;
+//                         renderTexture.draw(segment);
+//                     }
+//                 }
+//             }
+//         }
+//     }
+//     renderTexture.display();
+//     mapSprite.setTexture(renderTexture.getTexture());
+// }
 
 void StaticDisplayMap::updateTextureAll() {
     std::cout << "actualizando mapa" << std::endl;
@@ -760,13 +843,13 @@ void StaticDisplayMap::txtPointsToGraph(int mapWidth, int mapHeight, std::string
     // 150 400 600 200
     // 600 200 300 100
 
-    route = {
-        {{100, 300}, {200, 300}},
-        {{200, 300}, {150, 400}},
-        {{150, 400}, {600, 200}},
-        {{600, 200}, {300, 100}}
-    };
-    updateTextureRoute();
+    // route = {
+    //     {{100, 300}, {200, 300}},
+    //     {{200, 300}, {150, 400}},
+    //     {{150, 400}, {600, 200}},
+    //     {{600, 200}, {300, 100}}
+    // };
+    // updateTextureRoute();
 
     file.close();
 }

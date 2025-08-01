@@ -16,6 +16,8 @@ struct Point {
     }
     
     bool operator<(const Point& other) const {
+        if (x != other.x) return x < other.x;
+        return y < other.y;
     }
     
     bool operator==(const sf::Vector2i& other) const {

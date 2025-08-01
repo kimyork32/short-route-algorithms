@@ -9,6 +9,7 @@
 #include "GraphAlgorithmBase.hpp"
 #include "pathfinding/ShortestPathDijkstra.hpp"
 #include "pathfinding/ShortestPathAStar.hpp"
+#include "../include/CGALincludes.hpp"
 
 class StaticDisplayMap {
 public:
@@ -35,6 +36,7 @@ public:
     void clearCurrentPath();
     void printPathStatistics() const;
 
+    void genRandPoints(std::vector<CGALPoint>& puntos, int start, int end, unsigned seed);
     void genRandGraph();
     void genLima(int mapWidth, int mapHeight);
     void genArequipa(int mapWidth, int mapHeight);
@@ -71,7 +73,7 @@ private:
     int width, height, pointSize;
 
     std::unordered_map<Point, std::vector<std::pair<Point, std::pair<bool, std::vector<Point>>>>> graph;
-    std::vector<std::pair<Point, Point>> route;
+    // std::vector<std::pair<Point, Point>> route;
     sf::RenderTexture renderTexture;
     sf::Sprite mapSprite;
     int sizeNodes;

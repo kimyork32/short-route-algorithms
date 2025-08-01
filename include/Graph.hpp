@@ -2,7 +2,7 @@
 #define GRAPH_HPP
 
 class Graph {
-
+private:
 };
 
 #endif
